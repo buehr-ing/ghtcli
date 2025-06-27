@@ -1,0 +1,1227 @@
+#!/usr/bin/env bash
+
+# Error handling
+set -eEuo pipefail
+trap 'printf "%s\n" "💥 Error on line ${LINENO} while running: ${BASH_COMMAND}" >&2; exit 1' ERR
+
+if (( BASH_VERSINFO[0] < 4 )); then
+  printf '%s\n' 'This script requires Bash 4.0+'
+  false # fire the trap
+fi
+
+# Shell options
+shopt -s extglob
+shopt -s expand_aliases
+
+# Script directory and arguments
+SCRIPT_DIRNAME="$(cd "$(dirname "${0}")" && pwd)"
+SCRIPT_ARGS=("${@}")
+
+## sudo
+#if [[ $(id -u) -ne 0 ]]; then
+#  exec sudo GITHUB_TOKEN="${GITHUB_TOKEN-}" "${SCRIPT_DIRNAME}"/ghtcli "${SCRIPT_ARGS[@]}"
+#fi
+
+# github token (recommended)
+# https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#primary-rate-limit-for-unauthenticated-users
+# => unauthenticated : 60 requests per hour
+# => authenticated   : 5,000 requests per hour
+if [[ -n ${GITHUB_TOKEN-} ]]; then
+  alias curl="curl -H 'Authorization: Bearer ${GITHUB_TOKEN}'"
+fi
+
+# Target folders
+if [[ $(id -u) -eq 0 ]]; then
+  # all users of the system
+  mkdir -p /var/cache/ghtcli; cd $_                       # work-dir
+  mkdir -p /etc/ghtcli; CFG_PATH=$_                       # config-path
+  mkdir -p /usr/local/bin; BIN_PATH=$_                    # binary-path
+  mkdir -p /etc/fish/completions; FCD_PATH=$_             # fish-completion
+  mkdir -p /etc/bash_completion.d; BCD_PATH=$_            # bash-completion
+  mkdir -p /usr/share/zsh/vendor-completions; ZCD_PATH=$_ # zsh-completion
+else
+  # single user
+  mkdir -p "${HOME}"/.cache/ghtcli; cd $_                                  # work-dir
+  mkdir -p "${HOME}"/.config/ghtcli; CFG_PATH=$_                           # config-path
+  mkdir -p "${HOME}"/.local/bin; BIN_PATH=$_                               # binary-path
+  mkdir -p "${HOME}"/.config/fish/completions; FCD_PATH=$_                 # fish-completion
+  mkdir -p "${HOME}"/.local/share/bash-completion/completions; BCD_PATH=$_ # bash-completion
+  mkdir -p "${HOME}"/.zsh/completion; ZCD_PATH=$_                          # zsh-completion
+fi
+PATH="${BIN_PATH}:${PATH}"
+
+# Map to standard architecture names
+declare -l ARCH
+case $(uname -m) in
+  x86_64)    ARCH='amd64' ;;
+  x86|i386|i686) ARCH='386' ;;
+  aarch64)   ARCH='arm64' ;;
+  armv7*)    ARCH='armv7' ;;
+  armv6*)    ARCH='armv6' ;;
+  armv5*)    ARCH='armv5' ;;
+  *)         ARCH="$(uname -m)" ;;
+esac
+
+# Kernel (Linux|Darwin|?)
+# Other kernels are possible, but not all
+# of the tools used here are built for them.
+# For example, Freebsd.
+declare -l KERNEL
+KERNEL=$(uname -s)
+
+# sed inplace-compatibility
+if [[ ${KERNEL} == darwin ]]; then
+  alias sed='sed -i ""'
+else
+  alias sed='sed -i'
+fi
+
+#
+# Application groups and dependencies
+#
+
+_ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
+_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,helm,stern
+_ghlr_minio=mc,rclone
+_ghlr_ttx=fzf,yq
+_ghlr_kubens=fzf
+_ghlr_kubectx=fzf
+
+#
+# Installable Applications
+#
+
+# ghtcli
+_ghlr_ghtcli()
+{
+  local repo=ghtcli owner=buehr-ing asset=ghtcli
+  case ${1} in
+    install)
+      local asset_url=ghtcli
+      local asset_out='ghtcli-${c}'
+      _latest_commit_raw_asset
+      if [[ "$(basename ${BASH_SOURCE[0]})" == ghtcli ]]; then
+        if [[ ${KERNEL} == darwin ]]; then
+          msec=$(stat -f %m "${SCRIPT_DIRNAME}"/ghtcli)
+        else
+          msec=$(stat -c %Y "${SCRIPT_DIRNAME}"/ghtcli)
+        fi
+        if [[ $(( $(date +%s) - ${msec} )) -eq 0 ]]; then
+          exec "${SCRIPT_DIRNAME}"/ghtcli "${SCRIPT_ARGS[@]}"
+        fi
+      fi
+      ;;
+    remove)
+      _crontab disable
+      rmdir -v "${CFG_PATH}" ||:
+      rm -vf "${BIN_PATH}"/ghtcli
+      ;;
+    clean) rm -vf ghtcli-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# cert-manager-cli
+_ghlr_cmctl()
+{
+  local repo=cmctl owner=cert-manager asset=cmctl
+  case ${1-} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_url='${asset}_${KERNEL}_${ARCH}'
+      _latest_release_asset
+      cmctl completion bash >"${BCD_PATH}"/cmctl
+      cmctl completion zsh >"${ZCD_PATH}"/_cmctl
+      cmctl completion fsh >"${FCD_PATH}"/cmctl.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/cmctl \
+             "${BCD_PATH}"/cmctl \
+             "${ZCD_PATH}"/_cmctl \
+             "${FCD_PATH}"/cmctl.fish
+      ;;
+    clean) rm -vf cmctl-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# ctop
+_ghlr_ctop()
+{
+  local repo=ctop owner=bcicen asset=ctop
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_url='${asset}-${t//[^0-9.]}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    remove) rm -vf "${BIN_PATH}"/ctop ;;
+    clean) rm -vf ctop-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# curl
+_ghlr_curl()
+{
+  local repo=static-curl owner=stunnel asset=curl
+  case ${1} in
+    install)
+      local ARCH=${ARCH/amd64/x86_64}
+      local KERNEL=${KERNEL/darwin/macos}
+      local asset_ext=tar.xz
+      if [[ ${KERNEL} == macos ]]; then
+        local asset_url='${asset}-${KERNEL}-${ARCH}-${t}.${asset_ext}'
+      else
+        local asset_url='${asset}-${KERNEL}-${ARCH}-musl-${t}.${asset_ext}'
+        local asset_out='${asset}-${t}-musl-${KERNEL}-${ARCH}'
+      fi
+      local asset_tar=curl
+      _latest_release_asset
+      hash -d curl
+      ;;
+    remove) rm -vf "${BIN_PATH}"/curl ;;
+    clean) rm -vf curl-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# flux
+_ghlr_flux()
+{
+  local repo=flux2 owner=fluxcd asset=flux
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${t//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=flux
+      _latest_release_asset
+      flux completion bash >"${BCD_PATH}"/flux
+      flux completion zsh >"${ZCD_PATH}"/_flux
+      flux completion fish >"${FCD_PATH}"/flux.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/flux \
+             "${BCD_PATH}"/flux \
+             "${ZCD_PATH}"/_flux \
+             "${FCD_PATH}"/flux.fish
+      ;;
+    clean) rm -vf flux-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# fzf
+_ghlr_fzf()
+{
+  local repo=fzf owner=junegunn asset=fzf
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='${asset}-${t//[^0-9.]}-${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=fzf
+      _latest_release_asset
+      fzf --bash >"${BCD_PATH}"/fzf
+      fzf --zsh >"${ZCD_PATH}"/_fzf
+      fzf --fish >"${FCD_PATH}"/fzf.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/fzf \
+             "${BCD_PATH}"/fzf \
+             "${ZCD_PATH}"/_fzf \
+             "${FCD_PATH}"/fzf.fish
+      ;;
+    clean) rm -vf fzf-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# helm
+_ghlr_helm()
+{
+  #TODO: make other URLs configurable as well.
+  local repo=helm owner=helm asset=helm
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv7/arm}
+      local t=$(curl -fsSL https://api.github.com/repos/${owner}/${repo}/releases/latest |jq -r '.tag_name')
+      local asset_url="helm-${t}-${KERNEL}-${ARCH}"
+      local asset_out="helm-${t}-${KERNEL}-${ARCH}"
+      curl -fsSLR "https://get.helm.sh/${asset_url}.tar.gz" \
+        --etag-save "${asset_out}".tar.gz.etag \
+        --etag-compare "${asset_out}".tar.gz.etag \
+        --time-cond "${asset_out}".tar.gz \
+        --output "${asset_out}".tar.gz
+      tar xf "${asset_out}".tar.gz --strip-components=1 ${KERNEL}-${ARCH}/helm
+      mv -f helm "${asset_out}"
+      diff "${asset_out}" "${BIN_PATH}"/helm &>/dev/null \
+        || cp -v "${asset_out}" "${BIN_PATH}"/helm
+      chmod +x "${BIN_PATH}"/helm
+      helm completion bash >"${BCD_PATH}"/helm
+      helm completion zsh >"${ZCD_PATH}"/_helm
+      helm completion fish >"${FCD_PATH}"/helm.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/helm \
+             "${BCD_PATH}"/helm \
+             "${ZCD_PATH}"/_helm \
+             "${FCD_PATH}"/helm.fish
+      ;;
+    clean) rm -vf helm-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# jq
+_ghlr_jq()
+{
+  local repo=jq owner=jqlang asset=jq
+  case ${1} in
+    install)
+      local ARCH=${ARCH/386/i386}
+      local KERNEL=${KERNEL/darwin/macos}
+      _latest_release_asset
+      #jq completion bash >"${BCD_PATH}"/jq
+      local repo=bash-completion owner=scop asset=jq
+      local asset_url=completions/jq
+      local asset_out='${asset}-${c}-scop-bash-completion'
+      local asset_path="${BCD_PATH}"
+      _latest_commit_raw_asset
+      ;;
+    remove) rm -vf "${BIN_PATH}"/jq "${BCD_PATH}"/jq ;;
+    clean) rm -vf jq-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# k9s
+_ghlr_k9s()
+{
+  local repo=k9s owner=derailed asset=k9s
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${KERNEL^}_${ARCH}.${asset_ext}'
+      local asset_tar=k9s
+      _latest_release_asset
+      k9s completion bash >"${BCD_PATH}"/k9s
+      k9s completion zsh >"${ZCD_PATH}"/_k9s
+      k9s completion fish >"${FCD_PATH}"/k9s.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/k9s \
+             "${BCD_PATH}"/k9s \
+             "${ZCD_PATH}"/_k9s \
+             "${FCD_PATH}"/k9s.fish
+      ;;
+    clean) rm -vf k9s-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# krew
+_ghlr_krew()
+{
+  local repo=krew owner=kubernetes-sigs asset=krew
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_ext=tar.gz
+      local asset_url='${asset}-${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar='./krew-${KERNEL}_${ARCH}'
+      _latest_release_asset
+      ;;
+    remove) rm -vf "${BIN_PATH}"/krew ;;
+    clean) rm -vf krew-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# kube-ps1
+_ghlr_kube_ps1()
+{
+  local repo=kube-ps1 owner=jonmosco asset=kube-ps1.sh
+  case ${1} in
+    install)
+      local asset_branch=master
+      local asset_url='${asset}'
+      local asset_out='${asset}-${c}'
+      _latest_commit_raw_asset
+      ;;
+    remove) rm -vf "${BIN_PATH}"/kube-ps1.sh ;;
+    clean) rm -vf kube-ps1.sh-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# kubectl
+_ghlr_kubectl()
+{
+  #TODO: make other URLs configurable as well.
+  local repo=kubectl owner=kubernetes asset=kubectl
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local t=$(curl -fsSL https://dl.k8s.io/release/stable.txt)
+      local asset_out="kubectl-${t}-${KERNEL}-${ARCH}"
+      curl -fsSLR https://dl.k8s.io/release/${t}/bin/${KERNEL}/${ARCH}/kubectl \
+           --etag-save "${asset_out}".etag \
+           --etag-compare "${asset_out}".etag \
+           --time-cond "${asset_out}" \
+           --output "${asset_out}"
+      diff "${asset_out}" "${BIN_PATH}"/kubectl &>/dev/null \
+        || cp -v "${asset_out}" "${BIN_PATH}"/kubectl
+      chmod +x "${BIN_PATH}"/kubectl
+      kubectl completion bash >"${BCD_PATH}"/kubectl
+      kubectl completion zsh >"${ZCD_PATH}"/_kubectl
+      kubectl completion fish >"${FCD_PATH}"/kubectl.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/kubectl \
+             "${BCD_PATH}"/kubectl \
+             "${ZCD_PATH}"/_kubectl \
+             "${FCD_PATH}"/kubectl.fish
+      ;;
+    clean) rm -vf kubectl-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# kubectx => ktx
+_ghlr_kubectx()
+{
+  local repo=kubectx owner=ahmetb asset=ktx
+  case ${1} in
+    install)
+      local ARCH=${ARCH/amd64/x86_64}
+      local asset_ext=tar.gz
+      local asset_url='kubectx_${t}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=kubectx
+      _latest_release_asset
+      #ktx completion bash >"${BCD_PATH}"/ktx
+      local asset_url=completion/kubectx.bash
+      local asset_out='ktx-${t}-bash-completion-${c}'
+      local asset_path="${BCD_PATH}"
+      _latest_release_raw_asset
+      sed 's/^\(complete -F _kube_contexts kubectx kctx\)$/\1 ktx/' \
+        ktx-*-bash-completion-!(*.etag) "${BCD_PATH}"/ktx
+      #ktx completion zsh >"${ZCD_PATH}"/_ktx
+      local asset_url=completion/_kubectx.zsh
+      local asset_out='ktx-${t}-zsh-completion-${c}'
+      local asset_path="${ZCD_PATH}"
+      local asset=_ktx
+      _latest_release_raw_asset
+      sed 's/^\(#compdef kubectx kctx=kubectx\)$/\1 ktx=kubectx/' \
+        ktx-*-zsh-completion-!(*.etag) "${ZCD_PATH}"/_ktx
+      #ktx completion fish >"${FCD_PATH}"/ktx.fish
+      local asset_url=completion/kubectx.fish
+      local asset_out='ktx-${t}-fish-completion-${c}'
+      local asset_path="${FCD_PATH}"
+      local asset=ktx.fish
+      _latest_release_raw_asset
+      sed 's/kubectx/ktx/g' \
+        ktx-*-fish-completion-!(*.etag) "${FCD_PATH}"/ktx.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/ktx \
+             "${BCD_PATH}"/ktx \
+             "${ZCD_PATH}"/_ktx \
+             "${FCD_PATH}"/ktx.fish
+      ;;
+    clean) rm -vf ktx-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# kubens => kns
+_ghlr_kubens()
+{
+  local repo=kubectx owner=ahmetb asset=kns
+  case ${1} in
+    install)
+      local ARCH=${ARCH/amd64/x86_64}
+      local asset_ext=tar.gz
+      local asset_url='kubens_${t}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=kubens
+      _latest_release_asset
+      #kns completion bash >"${BCD_PATH}"/kns
+      local asset_url=completion/kubens.bash
+      local asset_out='kns-${t}-bash-completion-${c}'
+      local asset_path="${BCD_PATH}"
+      _latest_release_raw_asset
+      #kns completion zsh >"${ZCD_PATH}"/_kns
+      local asset_url=completion/_kubens.zsh
+      local asset_out='kns-${t}-zsh-completion-${c}'
+      local asset_path="${ZCD_PATH}"
+      local asset=_kns
+      _latest_release_raw_asset
+      #kns completion fish >"${FCD_PATH}"/kns.fish
+      local asset_url=completion/kubens.fish
+      local asset_out='kns-${t}-fish-completion-${c}'
+      local asset_path="${FCD_PATH}"
+      local asset=kns.fish
+      _latest_release_raw_asset
+      sed 's/kubens/kns/g' \
+        kns-*-fish-completion-!(*.etag) "${FCD_PATH}"/kns.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/kns \
+             "${BCD_PATH}"/kns \
+             "${ZCD_PATH}"/_kns \
+             "${FCD_PATH}"/kns.fish
+      ;;
+    clean) rm -vf kns-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# minio mc
+_ghlr_mc()
+{
+  #TODO: make other URLs configurable as well.
+  local repo=mc owner=minio asset=mc
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv7/arm}
+      local t=$(curl -fsSL https://api.github.com/repos/${owner}/${repo}/releases/latest |jq -r '.tag_name')
+      local asset_url="${KERNEL}-${ARCH}/mc"
+      local asset_out="mc-${t}-${KERNEL}-${ARCH}"
+      curl -fsSLR "https://dl.min.io/client/mc/release/${asset_url}" \
+           --etag-save "${asset_out}".etag \
+           --etag-compare "${asset_out}".etag \
+           --time-cond "${asset_out}" \
+           --output "${asset_out}"
+      diff "${asset_out}" "${BIN_PATH}"/mc &>/dev/null \
+        || cp -v "${asset_out}" "${BIN_PATH}"/mc
+      chmod +x "${BIN_PATH}"/mc
+      #SHELL=bash mc --autocompletion >/dev/null
+      printf '%s\n' "complete -C ${BIN_PATH@Q}/mc mc" >"${BCD_PATH}"/mc
+      SHELL=zsh mc --autocompletion >/dev/null
+      SHELL=fish mc --autocompletion >/dev/null
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/mc \
+             "${BCD_PATH}"/mc \
+             "${ZCD_PATH}"/_mc \
+             "${FCD_PATH}"/mc.fish
+      ;;
+    clean) rm -vf mc-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# rclone
+_ghlr_rclone()
+{
+  local repo=rclone owner=rclone asset=rclone
+  case ${1} in
+    install)
+      local KERNEL=${KERNEL/darwin/osx}
+      local ARCH=${ARCH/armv7/arm-v7}
+      local ARCH=${ARCH/armv6/arm-v6}
+      local ARCH=${ARCH/armv5/arm-v5}
+      local ARCH=${ARCH/i386/386}
+      local asset_ext=zip
+      local asset_url='${asset}-${t}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_zip='${asset}-${t}-${KERNEL}-${ARCH}/${asset}'
+      _latest_release_asset
+      rclone completion bash "${BCD_PATH}"/rclone
+      rclone completion zsh "${ZCD_PATH}"/_rclone
+      rclone completion fish "${FCD_PATH}"/rclone.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/rclone \
+             "${BCD_PATH}"/rclone \
+             "${ZCD_PATH}"/_rclone \
+             "${FCD_PATH}"/rclone.fish
+      ;;
+    clean) rm -vf rclone-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# skopeo
+_ghlr_skopeo()
+{
+  local repo=skopeo-binary owner=lework asset=skopeo
+  case ${1} in
+    install)
+      _latest_release_asset
+      skopeo completion bash >"${BCD_PATH}"/skopeo
+      skopeo completion zsh >"${ZCD_PATH}"/_skopeo
+      skopeo completion fish >"${FCD_PATH}"/skopeo.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/skopeo \
+             "${BCD_PATH}"/skopeo \
+             "${ZCD_PATH}"/_skopeo \
+             "${FCD_PATH}"/skopeo.fish
+      ;;
+    clean) rm -vf skopeo-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# stern
+_ghlr_stern()
+{
+  local repo=stern owner=stern asset=stern
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${t//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=stern
+      _latest_release_asset
+      stern --completion bash >"${BCD_PATH}"/stern
+      stern --completion zsh >"${ZCD_PATH}"/_stern
+      stern --completion fish >"${FCD_PATH}"/stern.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/stern \
+             "${BCD_PATH}"/stern \
+             "${ZCD_PATH}"/_stern \
+             "${FCD_PATH}"/stern.fish
+      ;;
+    clean) rm -vf stern-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# talhelper
+_ghlr_talhelper()
+{
+  local repo=talhelper owner=budimanjojo asset=talhelper
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=talhelper
+      _latest_release_asset
+      talhelper completion bash >"${BCD_PATH}"/talhelper
+      talhelper completion zsh >"${ZCD_PATH}"/_talhelper
+      talhelper completion fish >"${FCD_PATH}"/talhelper.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/talhelper \
+             "${BCD_PATH}"/talhelper \
+             "${ZCD_PATH}"/_talhelper \
+             "${FCD_PATH}"/talhelper.fish
+      ;;
+    clean) rm -vf talhelper-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# talm
+_ghlr_talm()
+{
+  local repo=talm owner=cozystack asset=talm
+  case ${1} in
+    install)
+      local ARCH=${ARCH/386/i386}
+      local asset_ext=tar.gz
+      local asset_url='${asset}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_tar=talm
+      _latest_release_asset
+      talm completion bash >"${BCD_PATH}"/talm
+      talm completion zsh >"${ZCD_PATH}"/_talm
+      talm completion fish >"${FCD_PATH}"/talm.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/talm \
+             "${BCD_PATH}"/talm \
+             "${ZCD_PATH}"/_talm \
+             "${FCD_PATH}"/talm.fish
+      ;;
+    clean) rm -vf talm-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# talos-ps1
+_ghlr_talos_ps1()
+{
+  local repo=ttx owner=mikemrm asset=talos-ps1.sh
+  case ${1} in
+    install)
+      local asset_url='${asset}'
+      local asset_out='${asset}-${c}'
+      _latest_commit_raw_asset
+      sed 's/printf "$output"/printf "\\x01$output\\x02"/' \
+        talos-ps1.sh-!(*.etag) "${BIN_PATH}"/talos-ps1.sh
+      ;;
+    remove) rm -vf "${BIN_PATH}"/talos-ps1.sh ;;
+    clean) rm -vf talos-ps1.sh-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# talosctl
+_ghlr_talosctl()
+{
+  local repo=talos owner=siderolabs asset=talosctl
+  case ${1} in
+    install)
+      _latest_release_asset
+      talosctl completion bash >"${BCD_PATH}"/talosctl
+      talosctl completion zsh >"${ZCD_PATH}"/_talosctl
+      talosctl completion fish >"${FCD_PATH}"/talosctl.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/talosctl \
+             "${BCD_PATH}"/talosctl \
+             "${ZCD_PATH}"/_talosctl \
+             "${FCD_PATH}"/talosctl.fish
+      ;;
+    clean) rm -vf talosctl-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# ttx
+_ghlr_ttx()
+{
+  local repo=ttx owner=mikemrm asset=ttx
+  case ${1} in
+    install)
+      local asset_url='${asset}'
+      local asset_out='${asset}-${c}'
+      _latest_commit_raw_asset
+      ;;
+    remove) rm -vf "${BIN_PATH}"/ttx ;;
+    clean) rm -vf ttx-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# velero
+_ghlr_velero()
+{
+  local repo=velero owner=vmware-tanzu asset=velero
+  case ${1-} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_ext=tar.gz
+      local asset_url='${asset}-${t}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_tar='${asset}-${t}-${KERNEL}-${ARCH}/${asset}'
+      _latest_release_asset
+      velero completion bash >"${BCD_PATH}"/velero
+      velero completion zsh >"${ZCD_PATH}"/_velero
+      velero completion fish >"${FCD_PATH}"/velero.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/velero \
+             "${BCD_PATH}"/velero \
+             "${ZCD_PATH}"/_velero \
+             "${FCD_PATH}"/velero.fish
+      ;;
+    clean) rm -vf velero-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+# yq
+_ghlr_yq()
+{
+  local repo=yq owner=mikefarah asset=yq
+  case ${1} in
+    install)
+      local asset_url='${asset}_${KERNEL}_${ARCH}'
+      _latest_release_asset
+      yq shell-completion bash >"${BCD_PATH}"/yq
+      yq shell-completion zsh >"${ZCD_PATH}"/_yq
+      yq shell-completion fish >"${FCD_PATH}"/yq.fish
+      ;;
+    remove)
+      rm -vf "${BIN_PATH}"/yq \
+             "${BCD_PATH}"/yq \
+             "${ZCD_PATH}"/_yq \
+             "${FCD_PATH}"/yq.fish
+      ;;
+    clean) rm -vf yq-* ;;
+    info) _getinfo ;;
+    *) false ;;
+  esac
+}
+
+#
+# Internal functions and vars
+#
+
+# Colors
+_clr_red=$'\e[38;2;255;0;0m'
+_clr_blue=$'\e[38;2;0;128;255m'
+_clr_orange=$'\e[38;2;255;106;0m'
+_clr_reset=$'\e[0m'
+
+# Installers
+_latest_release_asset()
+{
+  # owner        : owner namespace (mandatory)
+  # repo         : repo name (mandatory)
+  # asset        : asset name (mandatory)
+  # asset_tar    : asset name within tar archive (optional)    # default : ''
+  # asset_zip    : asset name within zip archive (optional)    # default : ''
+  # asset_ext    : asset file extension used in url (optional) # default : ''
+  # asset_url    : asset name used in url (optional)           # default : ${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}
+  # asset_out    : asset name used as output (optional)        # default : ${asset}-${t}-${KERNEL}-${ARCH}
+
+  # latest
+  if command -v jq &>/dev/null; then
+    local t=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+        |jq -r '.tag_name'
+    )
+  else
+    local t=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+        |awk -F\" '/"tag_name":/{print$(NF-1)}'
+    )
+  fi
+
+  # download
+  local asset_url="${asset_url-}" asset_out="${asset_out-}" local asset_ext="${asset_ext-}"
+  eval "asset_ext=\"${asset_ext}\""
+  eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${t}-${KERNEL}-${ARCH}}\""
+  if curl --help http |grep -- '--etag-' &>/dev/null; then
+    curl -fsSLR "https://github.com/${owner}/${repo}/releases/download/${t}/${asset_url}" \
+         --etag-save "${asset_out}${asset_ext:+.${asset_ext#.}}".etag \
+         --etag-compare "${asset_out}${asset_ext:+.${asset_ext#.}}".etag \
+         --time-cond "${asset_out}${asset_ext:+.${asset_ext#.}}" \
+         --output "${asset_out}${asset_ext:+.${asset_ext#.}}"
+  else
+    curl -fsSLR "https://github.com/${owner}/${repo}/releases/download/${t}/${asset_url}" \
+         --time-cond "${asset_out}${asset_ext:+.${asset_ext#.}}" \
+         --output "${asset_out}${asset_ext:+.${asset_ext#.}}"
+  fi
+
+  # extract
+  local asset_tar="${asset_tar-}" asset_zip="${asset_zip-}"
+  if [[ -n "${asset_tar}" ]]; then
+    eval "asset_tar=\"${asset_tar}\""
+    tar -xf "${asset_out}${asset_ext:+.${asset_ext#.}}" \
+        --strip-components=$(awk -F/ '{print(NF-1)}' <<<"${asset_tar}") \
+        "${asset_tar}" 2>/dev/null
+    mv -f "$(basename ${asset_tar})" "${asset_out}"
+  elif [[ -n "${asset_zip}" ]]; then
+    eval "asset_zip=\"${asset_zip}\""
+    unzip -qoj "${asset_out}${asset_ext:+.${asset_ext#.}}" \
+          "${asset_zip}" 2>/dev/null
+    mv -f "$(basename ${asset_zip})" "${asset_out}"
+  fi
+
+  # install
+  _install_asset
+}
+
+_latest_release_raw_asset()
+{
+  # owner        : owner namespace (mandatory)
+  # repo         : repo name (mandatory)
+  # asset        : asset name (mandatory)
+  # asset_url    : asset name used in url (optional)         # default : ${asset}-${KERNEL}-${ARCH}
+  # asset_out    : asset name used as output (optional)      # default : ${asset}-${t}-${KERNEL}-${ARCH}-${c}
+
+  # latest
+  local t=$( \
+    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+      |jq -r '.tag_name'
+  )
+  local c=$( \
+    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${t}" \
+      |jq -r '.object.sha[:7]'
+  )
+
+  # download
+  local asset_url="${asset_url-}" asset_out="${asset_out-}"
+  eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${t}-${KERNEL}-${ARCH}-${c}}\""
+  if curl --help http |grep -- '--etag-' &>/dev/null; then
+    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+         --etag-save "${asset_out}".etag \
+         --etag-compare "${asset_out}".etag \
+         --time-cond "${asset_out}" \
+         --output "${asset_out}"
+  else
+    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+         --time-cond "${asset_out}" \
+         --output "${asset_out}"
+  fi
+
+  # install
+  _install_asset
+}
+
+_latest_commit_raw_asset()
+{
+  # owner        : owner namespace (mandatory)
+  # repo         : repo name (mandatory)
+  # asset        : asset name (mandatory)
+  # asset_tar    : asset name within tar file (optional)     # default : unset
+  # asset_branch : asset branch (rawfile only and mandatory) # default : main
+  # asset_url    : asset name used in url (optional)         # default : ${asset}-${KERNEL}-${ARCH}
+  # asset_out    : asset name used as output (optional)      # default : ${asset}-(${c}-${KERNEL}-${ARCH}
+
+  # latest
+  local c=$( \
+    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/commits/heads/${asset_branch:-main}" \
+      |jq -r '.sha[:7]'
+  )
+
+  # download
+  local asset_url="${asset_url-}" asset_out="${asset_out-}"
+  eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${c}-${KERNEL}-${ARCH}}\""
+  if curl --help http |grep -- '--etag-' &>/dev/null; then
+    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+         --etag-save "${asset_out}".etag \
+         --etag-compare "${asset_out}".etag \
+         --time-cond "${asset_out}" \
+         --output "${asset_out}"
+  else
+    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+         --time-cond "${asset_out}" \
+         --output "${asset_out}"
+  fi
+
+  # install
+  _install_asset
+}
+
+_install_asset()
+{
+  local asset_path="${asset_path:-${BIN_PATH}}"
+  if ! diff "${asset_out}" "${asset_path}/${asset}" &>/dev/null; then
+    cp -v "${asset_out}" "${asset_path}/${asset}"
+    if [[ "${asset_path}" == "${BIN_PATH}" ]]; then
+      chmod a+x "${asset_path}/${asset}"
+    elif [[ "${asset_path}" == "${BCD_PATH}" ]]; then
+      chmod a-x "${asset_path}/${asset}"
+    fi
+  fi
+}
+
+# Install dependencies
+_dependencies()
+{
+  for i in ${@//,/ }; do
+    if ! command -v ${i} &>/dev/null; then
+      _ghlr_${i} install
+      _installed add ${i}
+    elif [[ ${i} == curl ]]; then
+      # current static curl with etag support
+      local CURL_CA_BUNDLE="${CURL_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}"
+      if [[ -r "${CURL_CA_BUNDLE}" ]]; then
+        if ! curl --help http |grep -- '--etag-' &>/dev/null; then
+          _ghlr_${i} install
+          _installed add ${i}
+        fi
+      fi
+    fi
+  done
+}
+
+# Recursive group resolver
+_resolve()
+{
+  local input=(${@//,/ }) output=()
+  local -A seen
+  while :; do
+    local next=()
+    for i in ${input[@]}; do
+      if [[ -n "${seen["${i}"]+_}" ]]; then
+        continue
+      fi
+      local name=_ghlr_${i}
+      if [[ -n "${!name-}" ]]; then
+        value=${!name}
+        next+=(${value//,/ })
+      fi
+      if declare -F _ghlr_${i} >/dev/null; then
+        output+=(${i})
+      elif ! compgen -v _ghlr_${i} >/dev/null; then
+        printf '%s %s\n%s\n' \
+          "${_clr_red}${i}${_clr_reset}" \
+          "${_clr_blue}was not found and cannot be installed!${_clr_reset}" \
+          "💡 Check the package lists with ${_clr_orange}${0} ${_clr_blue}list${_clr_reset}" \
+          >&2
+        false # fire the trap
+      fi
+      seen["${i}"]=1
+    done
+    if [[ ${#next[@]} -ne 0 ]]; then
+      input=(${next[@]})
+    else
+      break
+    fi
+  done
+  printf '%s\n' "${output[@]}" |sort
+}
+
+# get app infos from github
+_getinfo()
+{
+  local d="$(curl -fsSL "https://api.github.com/repos/${owner}/${repo}" \
+    |jq -r "[.description, .html_url, .homepage]
+            | map(select(. != null and . != \"\"))
+            | join(\"\n${_clr_reset}  => \")"
+  )"
+  printf '%s %b\n' \
+    "${_clr_orange}${FUNCNAME[1]#_ghlr_}${_clr_reset}" \
+    "${_clr_blue}${d}${_clr_reset}"
+}
+
+# Manages .installed
+_installed()
+{
+  if [[ ! -f .installed ]]; then
+    rm -f .installed
+    touch .installed
+  fi
+  sub=${1-}
+  shift ||:
+  case ${sub} in
+    add)
+      if ! grep -qxF "${1}" .installed; then
+        printf '%s\n' "${1}" >>.installed
+      fi
+      ;;
+    del)
+      if grep -qxF "${1}" .installed; then
+        sed "/^${1}$/d" .installed
+      fi
+      ;;
+    list)
+      xargs -n1 <.installed |sort
+      ;;
+    autoclean)
+      if [[ ! -s .installed ]]; then
+        printf '%s %s\n' \
+          "${_clr_orange}Autoclean${_clr_reset}" \
+          "${_clr_blue}no remaining tools detected - removing cache..${_clr_reset}"
+        rm -vrf $(pwd)
+      fi
+      ;;
+    rmdiff)
+      local new_installed="$( \
+        _resolve \
+          $(comm -23 <(_installed list) \
+                     <(_resolve ${@:-_all}) ))"
+      local cannot_removed="$( \
+        comm -12 <(printf '%s\n' "${new_installed}") \
+                 <(comm -12 <(_installed list) \
+                            <(_resolve ${@:-_all}) ))"
+      if [[ -n ${cannot_removed-} ]]; then
+        printf '%s %s\n%s\n' \
+          "${_clr_red}Ignored${_clr_reset}" \
+          "${_clr_blue}$(printf '%s ' ${cannot_removed})${_clr_reset}" \
+          "💡 Check the package dependency groups with ${_clr_orange}${0} ${_clr_blue}list${_clr_reset}" \
+          >&2
+      fi
+      comm -13 <(printf '%s\n' "${new_installed}") \
+               <(_installed list)
+      ;;
+    *) false ;;
+  esac
+}
+
+# Cron updates
+_crontab()
+{
+  local script="${BIN_PATH@Q}/ghtcli"
+  case ${1-} in
+    ena*)
+      # check marker
+      if [[ -e "${CFG_PATH}"/autoupdate ]]; then
+        local h=$(head -n1 "${CFG_PATH}"/autoupdate)
+        if [[ $(hostname -f) != ${h-} ]]; then
+          printf '%s %s\n' \
+            "${_clr_red}Autoupdate${_clr_reset}" \
+            "${_clr_blue}is already enabled on host ${_clr_orange}${h}${_clr_reset}"
+          return
+        fi
+      fi
+      # create cronjob and marker
+      local job="0 */6 * * 1-5 ${script} update"
+      if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
+        (crontab -l 2>/dev/null |grep -vF ${script} ||:; printf '%s\n' "${job}") |crontab -
+        hostname -f >"${CFG_PATH}"/autoupdate
+        printf '%s %s\n' \
+          "${_clr_orange}Autoupdate${_clr_reset}" \
+          'cronjob added:'
+      else
+        printf '%s %s\n' \
+          "${_clr_orange}Autoupdate${_clr_reset}" \
+          'cronjob(s) already present:'
+      fi
+      crontab -l 2>/dev/null |grep -F ${script} \
+        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+      printf '%s\n' "💡 Edit the timing manually with: ${_clr_blue}crontab -eu ${_clr_orange}${USER}${_clr_reset}"
+      ;;
+    dis*)
+      # remove cronjobs and own marker
+      local job="$(crontab -l 2>/dev/null |grep -F ${script} ||:)"
+      if [[ -n "${job}" ]]; then
+        (crontab -l 2>/dev/null |grep -vF ${script} ||:) |crontab -
+        printf '%s %s\n' \
+          "${_clr_orange}Autoupdate${_clr_reset}" \
+          'cronjob(s) removed:'
+      else
+        printf '%s %s\n' \
+          "${_clr_orange}Autoupdate${_clr_reset}" \
+          'no cronjob(s) found:'
+      fi
+      printf '%s\n' "${job:-n/a}" \
+        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+      if [[ -e "${CFG_PATH}"/autoupdate ]]; then
+        local h=$(head -n1 "${CFG_PATH}"/autoupdate)
+        if [[ $(hostname -f) == ${h-} ]]; then
+          rm -vf "${CFG_PATH}"/autoupdate
+        fi
+      fi
+      ;;
+    *)
+      printf '%s\n' "Usage: ${0} ${cmd} {enable|disable}"
+      ;;
+  esac
+}
+
+# List application groups
+_list()
+{
+  all_groups="$(compgen -v _ghlr_ |awk '{sub(/^_ghlr_/, ""); print}')"
+  for i in ${@:-${all_groups}}; do
+    group_list="$(_resolve ${i})"
+    printf '%-30s\t%s\n' \
+      "${_clr_orange}${i}${_clr_reset}" \
+      "${_clr_blue}$(printf '%s ' ${group_list})${_clr_reset}"
+  done
+}
+
+# Internal application groups
+_ghlr__installed="$(_installed list)"
+_ghlr__all="$(declare -F |awk '$3~/^_ghlr_/{sub(/^_ghlr_/,"",$3);print$3}')"
+
+# Help and usage pages (needs tabs => :set noexpandtab)
+_usage()
+{
+  cat <<-__USAGE__
+		ghtcli install <tools>             # Install selected or all tools
+		ghtcli remove <tools>              # Remove selected or all tools
+		ghtcli clean <tools>               # Clean up cached downloads
+		ghtcli list <tools>                # Show all available tools or groups
+		ghtcli info <tools>                # Show GitHub metadata for tools
+		ghtcli update                      # Update all installed tools
+		ghtcli autoupdate (enable|disable) # Enable or disable autoupdate with cron
+		ghtcli help                        # Show further infos
+		__USAGE__
+}
+
+_help()
+{
+  cat <<-__HELP__
+		
+		ghtcli – install, update and manage Talos and Kubernetes CLI tools
+		
+		$(_usage)
+		
+		Note:
+		  If <tools> is omitted, the action applies to all applicable tools.
+		  Commands like update, autoupdate or help do not use <tools>.
+		
+		Supported Platforms: 🐧 Linux  🍎 macOS
+		
+		More info: https://github.com/buehr-ing/ghtcli#readme
+		
+		__HELP__
+}
+
+#
+# Does the job
+#
+
+while :; do
+  cmd=${1-}
+  shift ||:
+  case ${cmd} in
+    deb*|dbg)
+      set -x ;;
+    lis*|ls) # list
+      _list ${@-}
+      break ;;
+    inf*) # info
+      _dependencies jq
+      for i in $(_resolve ${@:-_all}); do
+        _ghlr_${i} info
+      done
+      break ;;
+    ins*) # install
+      _dependencies curl jq
+      for i in $(_resolve ${@:-_all}); do
+        _ghlr_${i} install
+        _installed add ${i}
+      done
+      break ;;
+    upd*) # update
+      if _installed list |grep -qxF ghtcli; then
+        for i in ghtcli \
+          $(_installed list |(grep -vxF ghtcli ||:)); do
+            _ghlr_${i} install
+        done
+      else
+        for i in $(_installed list); do
+          _ghlr_${i} install
+        done
+      fi
+      break ;;
+    rem*|rm) # remove
+      for i in $(_installed rmdiff ${@:-_all}); do
+        _ghlr_${i} remove
+        _installed del ${i}
+      done
+      _installed autoclean
+      break ;;
+    cle*) # clean
+      for i in $(_resolve ${@:-_all}); do
+        _ghlr_${i} clean
+      done
+      break ;;
+    aut*|cro*) # autoupdate
+      _dependencies ghtcli
+      _crontab ${1-}
+      break ;;
+    hel*) # help
+      _help
+      break ;;
+    *)
+      _usage
+      break ;;
+  esac
+done
