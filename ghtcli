@@ -1069,7 +1069,7 @@ _crontab()
         fi
       fi
       # create cronjob and marker
-      local job="0 */6 * * 1-5 ${script} update"
+      local job="0 */6 * * 1-5 [ -x ${script} ] && ${script} update"
       if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
         (crontab -l 2>/dev/null |grep -vF ${script} ||:; printf '%s\n' "${job}") |crontab -
         hostname -f >"${CFG_PATH}"/autoupdate
