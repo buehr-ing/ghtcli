@@ -1187,7 +1187,7 @@ while :; do
       done
       break ;;
     ins*) # install
-      _dependencies curl jq
+      _dependencies jq
       for i in $(_resolve ${@:-_all}); do
         _ghlr_${i} install
         _installed add ${i}
