@@ -174,10 +174,11 @@ _ghlr_curl()
     install)
       local CURL_CA_BUNDLE="${CURL_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}"
       if [[ ! -r "${CURL_CA_BUNDLE}" ]]; then
-        printf '%s %s %s\n' \
+        printf '%s %s %s\n%s\n' \
           "${_clr_red}Ignored${_clr_reset}" \
           "${_clr_blue}curl${_clr_reset}" \
-          "${_clr_orange}certificate file not found: CURL_CA_BUNDLE='${CURL_CA_BUNDLE}'${_clr_reset}" \
+          "Certificate file not found: ${_clr_orange}${CURL_CA_BUNDLE}${_clr_reset}" \
+          "💡 Set the correct path with ${_clr_orange}export ${_clr_blue}CURL_CA_BUNDLE='/path/to/ca-cert-bundle'${_clr_reset}" \
           >&2
         return
       fi
