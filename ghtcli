@@ -1212,8 +1212,9 @@ while :; do
     ins*) # install
       _dependencies jq
       for i in $(_resolve ${@:-_all}); do
-        _ghlr_${i} install \
-          && _installed add ${i}
+        if _ghlr_${i} install; then
+          _installed add ${i}
+        fi
       done
       break ;;
     upd*) # update
@@ -1230,8 +1231,9 @@ while :; do
       break ;;
     rem*|rm) # remove
       for i in $(_installed rmdiff ${@:-_all}); do
-        _ghlr_${i} remove \
-          && _installed del ${i}
+        if _ghlr_${i} remove; then
+          _installed del ${i}
+        fi
       done
       _installed autoclean
       break ;;
