@@ -180,7 +180,7 @@ _ghlr_curl()
           "Certificate file not found: ${_clr_orange}${CURL_CA_BUNDLE}${_clr_reset}" \
           "💡 Set the correct path with ${_clr_orange}export ${_clr_blue}CURL_CA_BUNDLE='/path/to/ca-cert-bundle'${_clr_reset}" \
           >&2
-        return
+        return 1
       fi
       local ARCH=${ARCH/amd64/x86_64}
       local KERNEL=${KERNEL/darwin/macos}
@@ -1212,8 +1212,8 @@ while :; do
     ins*) # install
       _dependencies jq
       for i in $(_resolve ${@:-_all}); do
-        _ghlr_${i} install
-        _installed add ${i}
+        _ghlr_${i} install \
+          && _installed add ${i}
       done
       break ;;
     upd*) # update
@@ -1230,8 +1230,8 @@ while :; do
       break ;;
     rem*|rm) # remove
       for i in $(_installed rmdiff ${@:-_all}); do
-        _ghlr_${i} remove
-        _installed del ${i}
+        _ghlr_${i} remove \
+          && _installed del ${i}
       done
       _installed autoclean
       break ;;
