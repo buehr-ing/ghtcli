@@ -36,6 +36,7 @@ if [[ $(id -u) -eq 0 ]]; then
   mkdir -p /var/cache/ghtcli; cd $_                       # work-dir
   mkdir -p /etc/ghtcli; CFG_PATH=$_                       # config-path
   mkdir -p /usr/local/bin; BIN_PATH=$_                    # binary-path
+  mkdir -p /usr/local/libexec; LIBEXEC_PATH=$_            # libexec-path
   mkdir -p /etc/fish/completions; FCD_PATH=$_             # fish-completion
   mkdir -p /etc/bash_completion.d; BCD_PATH=$_            # bash-completion
   mkdir -p /usr/share/zsh/vendor-completions; ZCD_PATH=$_ # zsh-completion
@@ -44,6 +45,7 @@ else
   mkdir -p "${HOME}"/.cache/ghtcli; cd $_                                  # work-dir
   mkdir -p "${HOME}"/.config/ghtcli; CFG_PATH=$_                           # config-path
   mkdir -p "${HOME}"/.local/bin; BIN_PATH=$_                               # binary-path
+  mkdir -p "${HOME}"/.local/libexec; LIBEXEC_PATH=$_                       # libexec-path
   mkdir -p "${HOME}"/.config/fish/completions; FCD_PATH=$_                 # fish-completion
   mkdir -p "${HOME}"/.local/share/bash-completion/completions; BCD_PATH=$_ # bash-completion
   mkdir -p "${HOME}"/.zsh/completion; ZCD_PATH=$_                          # zsh-completion
@@ -357,9 +359,15 @@ _ghlr_kube_ps1()
       local asset_branch=master
       local asset_url='${asset}'
       local asset_out='${asset}-${c}'
+      local asset_path="${LIBEXEC_PATH}"
+      # TODO: compatibility only.. remove it after Aug25..
+      rm -vf "${BIN_PATH}"/kube-ps1.sh
       _latest_commit_raw_asset
       ;;
-    remove) rm -vf "${BIN_PATH}"/kube-ps1.sh ;;
+    remove)
+      rm -vf "${LIBEXEC_PATH}"/kube-ps1.sh \
+             "${BIN_PATH}"/kube-ps1.sh # TODO: remove it after Aug25..
+      ;;
     clean) rm -vf kube-ps1.sh-* ;;
     info) _getinfo ;;
     *) false ;;
@@ -668,11 +676,17 @@ _ghlr_talos_ps1()
     install)
       local asset_url='${asset}'
       local asset_out='${asset}-${c}'
+      local asset_path="${LIBEXEC_PATH}"
+      # TODO: compatibility only.. remove it after Aug25..
+      rm -vf "${BIN_PATH}"/talos-ps1.sh
       _latest_commit_raw_asset
       sed 's/printf "$output"/printf "\\x01$output\\x02"/' \
-        talos-ps1.sh-!(*.etag) "${BIN_PATH}"/talos-ps1.sh
+        talos-ps1.sh-!(*.etag) "${LIBEXEC_PATH}"/talos-ps1.sh
       ;;
-    remove) rm -vf "${BIN_PATH}"/talos-ps1.sh ;;
+    remove)
+      rm -vf "${LIBEXEC_PATH}"/talos-ps1.sh \
+             "${BIN_PATH}"/talos-ps1.sh # TODO: remove it after Aug25
+      ;;
     clean) rm -vf talos-ps1.sh-* ;;
     info) _getinfo ;;
     *) false ;;
@@ -1151,19 +1165,19 @@ _usage()
 _help()
 {
   cat <<-__HELP__
-		
+
 		ghtcli – install, update and manage Talos and Kubernetes CLI tools
-		
+
 		$(_usage)
-		
+
 		Note:
 		  If <tools> is omitted, the action applies to all applicable tools.
 		  Commands like update, autoupdate or help do not use <tools>.
-		
+
 		Supported Platforms: 🐧 Linux  🍎 macOS
-		
+
 		More info: https://github.com/buehr-ing/ghtcli#readme
-		
+
 		__HELP__
 }
 
