@@ -1069,7 +1069,11 @@ _crontab()
         fi
       fi
       # create cronjob and marker
-      local job="0 */6 * * 1-5 ${script} update"
+      if [[ ${KERNEL} == darwin ]]; then
+        local job="0 */6 * * 1-5 $(which bash 2>/dev/null) ${script} update"
+      else
+        local job="0 */6 * * 1-5 ${script} update"
+      fi
       if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
         (crontab -l 2>/dev/null |grep -vF ${script} ||:; printf '%s\n' "${job}") |crontab -
         hostname -f >"${CFG_PATH}"/autoupdate
