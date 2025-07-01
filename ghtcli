@@ -180,7 +180,7 @@ _ghlr_curl()
           "Certificate file not found: ${_clr_orange}${CURL_CA_BUNDLE}${_clr_reset}" \
           "💡 Set the correct path with ${_clr_orange}export ${_clr_blue}CURL_CA_BUNDLE='/path/to/ca-cert-bundle'${_clr_reset}" \
           >&2
-        return 255
+        return 75 # special return code that does not cause an abort
       fi
       local ARCH=${ARCH/amd64/x86_64}
       local KERNEL=${KERNEL/darwin/macos}
