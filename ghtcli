@@ -176,8 +176,8 @@ _ghlr_curl()
       if [[ ! -r "${CURL_CA_BUNDLE}" ]]; then
         printf '%s %s %s\n' \
           "${_clr_red}Ignored${_clr_reset}" \
-          "${_clr_orange}curl${_clr_reset}" \
-          "${_clr_blue}certificate file not found: CURL_CA_BUNDLE='${CURL_CA_BUNDLE}'${_clr_reset}" \
+          "${_clr_blue}curl${_clr_reset}" \
+          "${_clr_orange}certificate file not found: CURL_CA_BUNDLE='${CURL_CA_BUNDLE}'${_clr_reset}" \
           >&2
         return
       fi
