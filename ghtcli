@@ -172,6 +172,15 @@ _ghlr_curl()
   local repo=static-curl owner=stunnel asset=curl
   case ${1} in
     install)
+      local CURL_CA_BUNDLE="${CURL_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}"
+      if [[ ! -r "${CURL_CA_BUNDLE}" ]]; then
+        printf '%s %s %s\n' \
+          "${_clr_red}Ignored${_clr_reset}" \
+          "${_clr_orange}curl${_clr_reset}" \
+          "${_clr_blue}certificate file not found: CURL_CA_BUNDLE='${CURL_CA_BUNDLE}'${_clr_reset}" \
+          >&2
+        return
+      fi
       local ARCH=${ARCH/amd64/x86_64}
       local KERNEL=${KERNEL/darwin/macos}
       local asset_ext=tar.xz
@@ -953,12 +962,9 @@ _dependencies()
       _installed add ${i}
     elif [[ ${i} == curl ]]; then
       # current static curl with etag support
-      local CURL_CA_BUNDLE="${CURL_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}"
-      if [[ -r "${CURL_CA_BUNDLE}" ]]; then
-        if ! curl --help http |grep -- '--etag-' &>/dev/null; then
-          _ghlr_${i} install
-          _installed add ${i}
-        fi
+      if ! curl --help http |grep -- '--etag-' &>/dev/null; then
+        _ghlr_${i} install
+        _installed add ${i}
       fi
     fi
   done
