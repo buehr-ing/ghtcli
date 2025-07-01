@@ -1214,6 +1214,8 @@ while :; do
       for i in $(_resolve ${@:-_all}); do
         if _ghlr_${i} install; then
           _installed add ${i}
+        else
+          true
         fi
       done
       break ;;
@@ -1233,6 +1235,8 @@ while :; do
       for i in $(_installed rmdiff ${@:-_all}); do
         if _ghlr_${i} remove; then
           _installed del ${i}
+        else
+          true
         fi
       done
       _installed autoclean
