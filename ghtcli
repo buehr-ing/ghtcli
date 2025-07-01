@@ -180,7 +180,7 @@ _ghlr_curl()
           "Certificate file not found: ${_clr_orange}${CURL_CA_BUNDLE}${_clr_reset}" \
           "💡 Set the correct path with ${_clr_orange}export ${_clr_blue}CURL_CA_BUNDLE='/path/to/ca-cert-bundle'${_clr_reset}" \
           >&2
-        return 1
+        return 255
       fi
       local ARCH=${ARCH/amd64/x86_64}
       local KERNEL=${KERNEL/darwin/macos}
@@ -1214,8 +1214,6 @@ while :; do
       for i in $(_resolve ${@:-_all}); do
         if _ghlr_${i} install; then
           _installed add ${i}
-        else
-          true
         fi
       done
       break ;;
@@ -1223,11 +1221,19 @@ while :; do
       if _installed list |grep -qxF ghtcli; then
         for i in ghtcli \
           $(_installed list |(grep -vxF ghtcli ||:)); do
-            _ghlr_${i} install
+            if ! _ghlr_${i} install; then
+              if [[ ${?} -ne 75 ]]; then
+                false
+              fi
+            fi
         done
       else
         for i in $(_installed list); do
-          _ghlr_${i} install
+          if ! _ghlr_${i} install; then
+            if [[ ${?} -ne 75 ]]; then
+              false
+            fi
+          fi
         done
       fi
       break ;;
@@ -1235,8 +1241,6 @@ while :; do
       for i in $(_installed rmdiff ${@:-_all}); do
         if _ghlr_${i} remove; then
           _installed del ${i}
-        else
-          true
         fi
       done
       _installed autoclean
