@@ -1222,14 +1222,17 @@ while :; do
         for i in ghtcli \
           $(_installed list |(grep -vxF ghtcli ||:)); do
             _ghlr_${i} install || rc=${?}
+            if [[ ${rc-} -ne 0 || ${rc-} -ne 75 ]]; then
+              false
+            fi
         done
       else
         for i in $(_installed list); do
           _ghlr_${i} install || rc=${?}
+          if [[ ${rc-} -ne 0 || ${rc-} -ne 75 ]]; then
+            false
+          fi
         done
-        if [[ ${rc-} -ne 0 || ${rc-} -ne 75 ]]; then
-          false
-        fi
       fi
       break ;;
     rem*|rm) # remove
