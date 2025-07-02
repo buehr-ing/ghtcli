@@ -873,6 +873,7 @@ _remove_asset()
         "${BCD_PATH}/${asset}" \
         "${ZCD_PATH}/_${asset}" \
         "${FCD_PATH}/${asset}.fish"
+ _installed del ${FUNCNAME[1]#_ghlr_}
 }
 
 _clean_asset()
@@ -1153,9 +1154,7 @@ while :; do
       break ;;
     rem*|rm) # remove
       for i in $(_installed rmdiff ${@:-_all}); do
-        if _ghlr_${i} remove; then
-          _installed del ${i}
-        fi
+        _ghlr_${i} remove
       done
       _installed autoclean
       break ;;
