@@ -180,7 +180,7 @@ _ghlr_curl()
           "Certificate file not found: ${_clr_orange}${CURL_CA_BUNDLE}${_clr_reset}" \
           "💡 Set the correct path with ${_clr_orange}export ${_clr_blue}CURL_CA_BUNDLE='/path/to/ca-cert-bundle'${_clr_reset}" \
           >&2
-        return 75 # special return code that does not cause an abort
+        return
       fi
       local ARCH=${ARCH/amd64/x86_64}
       local KERNEL=${KERNEL/darwin/macos}
@@ -951,6 +951,7 @@ _install_asset()
     elif [[ "${asset_path}" == "${BCD_PATH}" ]]; then
       chmod a-x "${asset_path}/${asset}"
     fi
+    _installed add ${asset}
   fi
 }
 
@@ -960,12 +961,10 @@ _dependencies()
   for i in ${@//,/ }; do
     if ! command -v ${i} &>/dev/null; then
       _ghlr_${i} install
-      _installed add ${i}
     elif [[ ${i} == curl ]]; then
       # current static curl with etag support
       if ! curl --help http |grep -- '--etag-' &>/dev/null; then
         _ghlr_${i} install
-        _installed add ${i}
       fi
     fi
   done
@@ -1212,26 +1211,18 @@ while :; do
     ins*) # install
       _dependencies jq
       for i in $(_resolve ${@:-_all}); do
-        if _ghlr_${i} install; then
-          _installed add ${i}
-        fi
+        _ghlr_${i} install
       done
       break ;;
     upd*) # update
       if _installed list |grep -qxF ghtcli; then
         for i in ghtcli \
           $(_installed list |(grep -vxF ghtcli ||:)); do
-            _ghlr_${i} install && rc=${?} || rc=${?}
-            if [[ ${rc} -ne 0 && ${rc} -ne 75 ]]; then
-              false
-            fi
+            _ghlr_${i} install
         done
       else
         for i in $(_installed list); do
-          _ghlr_${i} install && rc=${?} || rc=${?}
-          if [[ ${rc} -ne 0 && ${rc} -ne 75 ]]; then
-            false
-          fi
+          _ghlr_${i} install
         done
       fi
       break ;;
