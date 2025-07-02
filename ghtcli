@@ -119,7 +119,7 @@ _ghlr_ghtcli()
       _remove_asset
       ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -139,7 +139,7 @@ _ghlr_cmctl()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -156,7 +156,7 @@ _ghlr_ctop()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -192,7 +192,7 @@ _ghlr_curl()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -214,7 +214,7 @@ _ghlr_flux()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -235,7 +235,7 @@ _ghlr_fzf()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -267,7 +267,7 @@ _ghlr_helm()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -290,7 +290,7 @@ _ghlr_jq()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -311,7 +311,7 @@ _ghlr_k9s()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -330,7 +330,7 @@ _ghlr_krew()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -350,7 +350,7 @@ _ghlr_kube_ps1()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -379,7 +379,7 @@ _ghlr_kubectl()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -421,7 +421,7 @@ _ghlr_kubectx()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -459,7 +459,7 @@ _ghlr_kubens()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -490,7 +490,7 @@ _ghlr_mc()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -516,7 +516,7 @@ _ghlr_rclone()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -534,7 +534,7 @@ _ghlr_skopeo()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -556,7 +556,7 @@ _ghlr_stern()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -577,7 +577,7 @@ _ghlr_talhelper()
       ;;
     remove) _remove_asset;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -599,7 +599,7 @@ _ghlr_talm()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -620,7 +620,7 @@ _ghlr_talos_ps1()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -638,7 +638,7 @@ _ghlr_talosctl()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -655,7 +655,7 @@ _ghlr_ttx()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -677,7 +677,7 @@ _ghlr_velero()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -696,7 +696,7 @@ _ghlr_yq()
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
-    info) _getinfo ;;
+    info) _get_asset_info ;;
     *) false ;;
   esac
 }
@@ -934,7 +934,7 @@ _resolve()
 }
 
 # get app infos from github
-_getinfo()
+_get_asset_info()
 {
   local d="$(curl -fsSL "https://api.github.com/repos/${owner}/${repo}" \
     |jq -r "[.description, .html_url, .homepage]
