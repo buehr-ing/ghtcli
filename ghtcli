@@ -853,10 +853,10 @@ _install_asset()
     cp -v "${asset_out}" "${asset_path}/${asset}"
     if [[ "${asset_path}" == "${BIN_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
-      _installed add ${FUNCNAME[1]#_ghlr_}
+      _installed add ${FUNCNAME[2]#_ghlr_}
     elif [[ "${asset_path}" == "${LIBEXEC_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
-      _installed add ${FUNCNAME[1]#_ghlr_}
+      _installed add ${FUNCNAME[2]#_ghlr_}
     elif [[ "${asset_path}" == "${BCD_PATH}" ]]; then
       chmod a-x "${asset_path}/${asset}"
     elif [[ "${asset_path}" == "${ZCD_PATH}" ]]; then
