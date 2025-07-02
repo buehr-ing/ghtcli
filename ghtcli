@@ -116,9 +116,9 @@ _ghlr_ghtcli()
     remove)
       _crontab disable
       rmdir -v "${CFG_PATH}" ||:
-      rm -vf "${BIN_PATH}"/ghtcli
+      _remove_asset
       ;;
-    clean) rm -vf ghtcli-* ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -137,13 +137,8 @@ _ghlr_cmctl()
       cmctl completion zsh >"${ZCD_PATH}"/_cmctl
       cmctl completion fsh >"${FCD_PATH}"/cmctl.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/cmctl \
-             "${BCD_PATH}"/cmctl \
-             "${ZCD_PATH}"/_cmctl \
-             "${FCD_PATH}"/cmctl.fish
-      ;;
-    clean) rm -vf cmctl-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -159,8 +154,8 @@ _ghlr_ctop()
       local asset_url='${asset}-${t//[^0-9.]}-${KERNEL}-${ARCH}'
       _latest_release_asset
       ;;
-    remove) rm -vf "${BIN_PATH}"/ctop ;;
-    clean) rm -vf ctop-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -195,8 +190,8 @@ _ghlr_curl()
       _latest_release_asset
       hash -d curl
       ;;
-    remove) rm -vf "${BIN_PATH}"/curl ;;
-    clean) rm -vf curl-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -217,13 +212,8 @@ _ghlr_flux()
       flux completion zsh >"${ZCD_PATH}"/_flux
       flux completion fish >"${FCD_PATH}"/flux.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/flux \
-             "${BCD_PATH}"/flux \
-             "${ZCD_PATH}"/_flux \
-             "${FCD_PATH}"/flux.fish
-      ;;
-    clean) rm -vf flux-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -243,13 +233,8 @@ _ghlr_fzf()
       fzf --zsh >"${ZCD_PATH}"/_fzf
       fzf --fish >"${FCD_PATH}"/fzf.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/fzf \
-             "${BCD_PATH}"/fzf \
-             "${ZCD_PATH}"/_fzf \
-             "${FCD_PATH}"/fzf.fish
-      ;;
-    clean) rm -vf fzf-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -280,13 +265,8 @@ _ghlr_helm()
       helm completion zsh >"${ZCD_PATH}"/_helm
       helm completion fish >"${FCD_PATH}"/helm.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/helm \
-             "${BCD_PATH}"/helm \
-             "${ZCD_PATH}"/_helm \
-             "${FCD_PATH}"/helm.fish
-      ;;
-    clean) rm -vf helm-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -308,8 +288,8 @@ _ghlr_jq()
       local asset_path="${BCD_PATH}"
       _latest_commit_raw_asset
       ;;
-    remove) rm -vf "${BIN_PATH}"/jq "${BCD_PATH}"/jq ;;
-    clean) rm -vf jq-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -329,13 +309,8 @@ _ghlr_k9s()
       k9s completion zsh >"${ZCD_PATH}"/_k9s
       k9s completion fish >"${FCD_PATH}"/k9s.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/k9s \
-             "${BCD_PATH}"/k9s \
-             "${ZCD_PATH}"/_k9s \
-             "${FCD_PATH}"/k9s.fish
-      ;;
-    clean) rm -vf k9s-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -353,8 +328,8 @@ _ghlr_krew()
       local asset_tar='./krew-${KERNEL}_${ARCH}'
       _latest_release_asset
       ;;
-    remove) rm -vf "${BIN_PATH}"/krew ;;
-    clean) rm -vf krew-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -370,15 +345,11 @@ _ghlr_kube_ps1()
       local asset_url='${asset}'
       local asset_out='${asset}-${c}'
       local asset_path="${LIBEXEC_PATH}"
-      # TODO: compatibility only.. remove it after Aug25..
       rm -vf "${BIN_PATH}"/kube-ps1.sh
       _latest_commit_raw_asset
       ;;
-    remove)
-      rm -vf "${LIBEXEC_PATH}"/kube-ps1.sh \
-             "${BIN_PATH}"/kube-ps1.sh # TODO: remove it after Aug25..
-      ;;
-    clean) rm -vf kube-ps1.sh-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -406,13 +377,8 @@ _ghlr_kubectl()
       kubectl completion zsh >"${ZCD_PATH}"/_kubectl
       kubectl completion fish >"${FCD_PATH}"/kubectl.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/kubectl \
-             "${BCD_PATH}"/kubectl \
-             "${ZCD_PATH}"/_kubectl \
-             "${FCD_PATH}"/kubectl.fish
-      ;;
-    clean) rm -vf kubectl-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -453,13 +419,8 @@ _ghlr_kubectx()
       sed 's/kubectx/ktx/g' \
         ktx-*-fish-completion-!(*.etag) "${FCD_PATH}"/ktx.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/ktx \
-             "${BCD_PATH}"/ktx \
-             "${ZCD_PATH}"/_ktx \
-             "${FCD_PATH}"/ktx.fish
-      ;;
-    clean) rm -vf ktx-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -496,13 +457,8 @@ _ghlr_kubens()
       sed 's/kubens/kns/g' \
         kns-*-fish-completion-!(*.etag) "${FCD_PATH}"/kns.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/kns \
-             "${BCD_PATH}"/kns \
-             "${ZCD_PATH}"/_kns \
-             "${FCD_PATH}"/kns.fish
-      ;;
-    clean) rm -vf kns-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -532,13 +488,8 @@ _ghlr_mc()
       SHELL=zsh mc --autocompletion >/dev/null
       SHELL=fish mc --autocompletion >/dev/null
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/mc \
-             "${BCD_PATH}"/mc \
-             "${ZCD_PATH}"/_mc \
-             "${FCD_PATH}"/mc.fish
-      ;;
-    clean) rm -vf mc-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -563,13 +514,8 @@ _ghlr_rclone()
       rclone completion zsh "${ZCD_PATH}"/_rclone
       rclone completion fish "${FCD_PATH}"/rclone.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/rclone \
-             "${BCD_PATH}"/rclone \
-             "${ZCD_PATH}"/_rclone \
-             "${FCD_PATH}"/rclone.fish
-      ;;
-    clean) rm -vf rclone-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -586,13 +532,8 @@ _ghlr_skopeo()
       skopeo completion zsh >"${ZCD_PATH}"/_skopeo
       skopeo completion fish >"${FCD_PATH}"/skopeo.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/skopeo \
-             "${BCD_PATH}"/skopeo \
-             "${ZCD_PATH}"/_skopeo \
-             "${FCD_PATH}"/skopeo.fish
-      ;;
-    clean) rm -vf skopeo-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -613,13 +554,8 @@ _ghlr_stern()
       stern --completion zsh >"${ZCD_PATH}"/_stern
       stern --completion fish >"${FCD_PATH}"/stern.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/stern \
-             "${BCD_PATH}"/stern \
-             "${ZCD_PATH}"/_stern \
-             "${FCD_PATH}"/stern.fish
-      ;;
-    clean) rm -vf stern-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -639,13 +575,8 @@ _ghlr_talhelper()
       talhelper completion zsh >"${ZCD_PATH}"/_talhelper
       talhelper completion fish >"${FCD_PATH}"/talhelper.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/talhelper \
-             "${BCD_PATH}"/talhelper \
-             "${ZCD_PATH}"/_talhelper \
-             "${FCD_PATH}"/talhelper.fish
-      ;;
-    clean) rm -vf talhelper-* ;;
+    remove) _remove_asset;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -666,13 +597,8 @@ _ghlr_talm()
       talm completion zsh >"${ZCD_PATH}"/_talm
       talm completion fish >"${FCD_PATH}"/talm.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/talm \
-             "${BCD_PATH}"/talm \
-             "${ZCD_PATH}"/_talm \
-             "${FCD_PATH}"/talm.fish
-      ;;
-    clean) rm -vf talm-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -687,17 +613,13 @@ _ghlr_talos_ps1()
       local asset_url='${asset}'
       local asset_out='${asset}-${c}'
       local asset_path="${LIBEXEC_PATH}"
-      # TODO: compatibility only.. remove it after Aug25..
       rm -vf "${BIN_PATH}"/talos-ps1.sh
       _latest_commit_raw_asset
       sed 's/printf "$output"/printf "\\x01$output\\x02"/' \
         talos-ps1.sh-!(*.etag) "${LIBEXEC_PATH}"/talos-ps1.sh
       ;;
-    remove)
-      rm -vf "${LIBEXEC_PATH}"/talos-ps1.sh \
-             "${BIN_PATH}"/talos-ps1.sh # TODO: remove it after Aug25
-      ;;
-    clean) rm -vf talos-ps1.sh-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -714,13 +636,8 @@ _ghlr_talosctl()
       talosctl completion zsh >"${ZCD_PATH}"/_talosctl
       talosctl completion fish >"${FCD_PATH}"/talosctl.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/talosctl \
-             "${BCD_PATH}"/talosctl \
-             "${ZCD_PATH}"/_talosctl \
-             "${FCD_PATH}"/talosctl.fish
-      ;;
-    clean) rm -vf talosctl-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -736,8 +653,8 @@ _ghlr_ttx()
       local asset_out='${asset}-${c}'
       _latest_commit_raw_asset
       ;;
-    remove) rm -vf "${BIN_PATH}"/ttx ;;
-    clean) rm -vf ttx-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -758,13 +675,8 @@ _ghlr_velero()
       velero completion zsh >"${ZCD_PATH}"/_velero
       velero completion fish >"${FCD_PATH}"/velero.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/velero \
-             "${BCD_PATH}"/velero \
-             "${ZCD_PATH}"/_velero \
-             "${FCD_PATH}"/velero.fish
-      ;;
-    clean) rm -vf velero-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -782,13 +694,8 @@ _ghlr_yq()
       yq shell-completion zsh >"${ZCD_PATH}"/_yq
       yq shell-completion fish >"${FCD_PATH}"/yq.fish
       ;;
-    remove)
-      rm -vf "${BIN_PATH}"/yq \
-             "${BCD_PATH}"/yq \
-             "${ZCD_PATH}"/_yq \
-             "${FCD_PATH}"/yq.fish
-      ;;
-    clean) rm -vf yq-* ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
     info) _getinfo ;;
     *) false ;;
   esac
@@ -953,6 +860,20 @@ _install_asset()
     fi
     _installed add ${asset}
   fi
+}
+
+_remove_asset()
+{
+ rm -vf "${LIBEXEC_PATH}${asset}" \
+        "${BIN_PATH}/${asset}" \
+        "${BCD_PATH}/${asset}" \
+        "${ZCD_PATH}/_${asset}" \
+        "${FCD_PATH}/${asset}.fish"
+}
+
+_clean_asset()
+{
+  rm -vf "${asset}"-*
 }
 
 # Install dependencies
