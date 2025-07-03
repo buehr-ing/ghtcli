@@ -918,7 +918,7 @@ _resolve()
         printf '%s %s\n%s\n' \
           "${_clr_red}${i}${_clr_reset}" \
           "${_clr_blue}was not found and cannot be installed!${_clr_reset}" \
-          "💡 Check the package lists with ${_clr_orange}${0} ${_clr_blue}list${_clr_reset}" \
+          "💡 Check the package lists with ${_clr_orange}ghtcli ${_clr_blue}list${_clr_reset}" \
           >&2
         false # fire the trap
       fi
@@ -990,7 +990,7 @@ _installed()
         printf '%s %s\n%s\n' \
           "${_clr_red}Ignored${_clr_reset}" \
           "${_clr_blue}$(printf '%s ' ${cannot_removed})${_clr_reset}" \
-          "💡 Check the package dependency groups with ${_clr_orange}${0} ${_clr_blue}list${_clr_reset}" \
+          "💡 Check the package dependency groups with ${_clr_orange}ghtcli ${_clr_blue}list${_clr_reset}" \
           >&2
       fi
       comm -13 <(printf '%s\n' "${new_installed}") \
@@ -1060,7 +1060,7 @@ _crontab()
       fi
       ;;
     *)
-      printf '%s\n' "Usage: ${0} ${cmd} {enable|disable}"
+      printf '%s\n' "Usage: ghtcli ${cmd} {enable|disable}"
       ;;
   esac
 }
