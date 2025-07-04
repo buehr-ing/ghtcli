@@ -1006,16 +1006,7 @@ _crontab()
   local script="${BIN_PATH@Q}/ghtcli"
   case ${1-} in
     ena*)
-      # check marker
-      if [[ -e "${CFG_PATH}"/autoupdate ]]; then
-        local h=$(head -n1 "${CFG_PATH}"/autoupdate)
-        if [[ $(hostname -f) != ${h-} ]]; then
-          printf '%s %s\n' \
-            "${_clr_red}Autoupdate${_clr_reset}" \
-            "${_clr_blue}is already enabled on host ${_clr_orange}${h}${_clr_reset}"
-          return
-        fi
-      fi
+      _crontab check
       # create cronjob and marker
       if [[ ${KERNEL} == darwin ]]; then
         local job="0 */6 * * 1-5 $(which bash 2>/dev/null) ${script} update"
@@ -1056,6 +1047,17 @@ _crontab()
         local h=$(head -n1 "${CFG_PATH}"/autoupdate)
         if [[ $(hostname -f) == ${h-} ]]; then
           rm -vf "${CFG_PATH}"/autoupdate
+        fi
+      fi
+      ;;
+    che*) # check marker
+      if [[ -e "${CFG_PATH}"/autoupdate ]]; then
+        local h=$(head -n1 "${CFG_PATH}"/autoupdate)
+        if [[ $(hostname -f) != ${h-} ]]; then
+          printf '%s %s\n' \
+            "${_clr_red}Autoupdate${_clr_reset}" \
+            "${_clr_blue}is already enabled on host ${_clr_orange}${h}${_clr_reset}"
+          return 1
         fi
       fi
       ;;
@@ -1141,6 +1143,10 @@ while :; do
       done
       break ;;
     upd*) # update
+      if [[ ! -t 0 ]]; then
+        # when not running in a terminal
+        _crontab check # check marker
+      fi
       if _installed list |grep -qxF ghtcli; then
         for i in ghtcli \
           $(_installed list |(grep -vxF ghtcli ||:)); do
