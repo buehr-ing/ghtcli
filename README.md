@@ -7,7 +7,7 @@
 ## 📦 Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/buehr-ing/ghtcli/main/ghtcli | bash -s install ghtcli
+curl -s ghtcli.sh | bash -s install ghtcli
 ```
 
 The script installs itself as `ghtcli` (typically under `~/.local/bin`).
