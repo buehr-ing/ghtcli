@@ -252,8 +252,6 @@ _ghlr_helm()
       local asset_url="helm-${t}-${KERNEL}-${ARCH}"
       local asset_out="helm-${t}-${KERNEL}-${ARCH}"
       curl -fsSLR "https://get.helm.sh/${asset_url}.tar.gz" \
-        --etag-save "${asset_out}".tar.gz.etag \
-        --etag-compare "${asset_out}".tar.gz.etag \
         --time-cond "${asset_out}".tar.gz \
         --output "${asset_out}".tar.gz
       tar xf "${asset_out}".tar.gz --strip-components=1 ${KERNEL}-${ARCH}/helm
@@ -261,6 +259,7 @@ _ghlr_helm()
       diff "${asset_out}" "${BIN_PATH}"/helm &>/dev/null \
         || cp -v "${asset_out}" "${BIN_PATH}"/helm
       chmod +x "${BIN_PATH}"/helm
+      _installed add helm
       helm completion bash >"${BCD_PATH}"/helm
       helm completion zsh >"${ZCD_PATH}"/_helm
       helm completion fish >"${FCD_PATH}"/helm.fish
@@ -366,13 +365,12 @@ _ghlr_kubectl()
       local t=$(curl -fsSL https://dl.k8s.io/release/stable.txt)
       local asset_out="kubectl-${t}-${KERNEL}-${ARCH}"
       curl -fsSLR https://dl.k8s.io/release/${t}/bin/${KERNEL}/${ARCH}/kubectl \
-           --etag-save "${asset_out}".etag \
-           --etag-compare "${asset_out}".etag \
            --time-cond "${asset_out}" \
            --output "${asset_out}"
       diff "${asset_out}" "${BIN_PATH}"/kubectl &>/dev/null \
         || cp -v "${asset_out}" "${BIN_PATH}"/kubectl
       chmod +x "${BIN_PATH}"/kubectl
+      _installed add kubectl
       kubectl completion bash >"${BCD_PATH}"/kubectl
       kubectl completion zsh >"${ZCD_PATH}"/_kubectl
       kubectl completion fish >"${FCD_PATH}"/kubectl.fish
@@ -476,13 +474,12 @@ _ghlr_mc()
       local asset_url="${KERNEL}-${ARCH}/mc"
       local asset_out="mc-${t}-${KERNEL}-${ARCH}"
       curl -fsSLR "https://dl.min.io/client/mc/release/${asset_url}" \
-           --etag-save "${asset_out}".etag \
-           --etag-compare "${asset_out}".etag \
            --time-cond "${asset_out}" \
            --output "${asset_out}"
       diff "${asset_out}" "${BIN_PATH}"/mc &>/dev/null \
         || cp -v "${asset_out}" "${BIN_PATH}"/mc
       chmod +x "${BIN_PATH}"/mc
+      _installed add mc
       #SHELL=bash mc --autocompletion >/dev/null
       printf '%s\n' "complete -C ${BIN_PATH@Q}/mc mc" >"${BCD_PATH}"/mc
       SHELL=zsh mc --autocompletion >/dev/null
