@@ -1077,6 +1077,9 @@ _list()
   all_groups="$(compgen -v _ghlr_ |awk '{sub(/^_ghlr_/, ""); print}')"
   for i in ${@:-${all_groups}}; do
     group_list="$(_resolve ${i})"
+    if [[ -z "${group_list}" ]]; then
+      continue
+    fi
     printf '%-30s\t%s\n' \
       "${_clr_orange}${i}${_clr_reset}" \
       "${_clr_blue}$(printf '%s ' ${group_list})${_clr_reset}"
