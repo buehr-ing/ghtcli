@@ -980,12 +980,12 @@ _installed()
     rmdiff)
       local new_installed="$( \
         _resolve \
-          $(comm -23 <(_installed list) \
-                     <(_resolve ${@:-_all}) ))"
+          $(comm -23 <(_installed list |sort) \
+                     <(_resolve ${@:-_all}) |sort))"
       local cannot_removed="$( \
-        comm -12 <(printf '%s\n' "${new_installed}") \
-                 <(comm -12 <(_installed list) \
-                            <(_resolve ${@:-_all}) ))"
+        comm -12 <(printf '%s\n' "${new_installed}" |sort) \
+                 <(comm -12 <(_installed list |sort) \
+                            <(_resolve ${@:-_all}) |sort))"
       if [[ -n ${cannot_removed-} ]]; then
         printf '%s %s\n%s\n' \
           "${_clr_red}Ignored${_clr_reset}" \
@@ -993,8 +993,8 @@ _installed()
           "💡 Check the package dependency groups with ${_clr_orange}ghtcli ${_clr_blue}list${_clr_reset}" \
           >&2
       fi
-      comm -13 <(printf '%s\n' "${new_installed}") \
-               <(_installed list)
+      comm -13 <(printf '%s\n' "${new_installed}" |sort) \
+               <(_installed list |sort)
       ;;
     *) false ;;
   esac
@@ -1087,8 +1087,12 @@ _list()
 }
 
 # Internal application groups
+_ghlr__all="$(declare -F \
+  |awk '$3~/^_ghlr_/{sub(/^_ghlr_/,"",$3);print$3}')"
 _ghlr__installed="$(_installed list)"
-_ghlr__all="$(declare -F |awk '$3~/^_ghlr_/{sub(/^_ghlr_/,"",$3);print$3}')"
+_ghlr__missing="$(comm -23 \
+  <(printf '%s\n' ${_ghlr__all} |sort) \
+  <(printf '%s\n' ${_ghlr__installed}) |sort)"
 
 # Help and usage pages (needs tabs => :set noexpandtab)
 _usage()
