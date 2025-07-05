@@ -1108,7 +1108,7 @@ _usage()
 		ghtcli list <tools>                # Show all available tools or groups
 		ghtcli info <tools>                # Show GitHub metadata for tools
 		ghtcli update                      # Update all installed tools
-		ghtcli autoupdate (enable|disable) # Enable or disable autoupdate with cron
+		ghtcli autoupdate (enable|disable) # Enable or disable autoupdate
 		ghtcli help                        # Show further infos
 		__USAGE__
 }
