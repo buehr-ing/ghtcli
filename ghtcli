@@ -4,8 +4,9 @@
 set -eEuo pipefail
 trap 'printf "%s\n" "💥 Error on line ${LINENO} while running: ${BASH_COMMAND}" >&2; exit 1' ERR
 
-if (( BASH_VERSINFO[0] < 4 )); then
-  printf '%s\n' 'This script requires Bash 4.0+'
+if (( BASH_VERSINFO[0] < 4 ||
+      (BASH_VERSINFO[0] ==4 && BASH_VERSINFO[1] < 4) )); then
+  printf '%s\n' 'This script requires Bash 4.4+'
   false # fire the trap
 fi
 
