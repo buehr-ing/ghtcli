@@ -1010,7 +1010,7 @@ _noninteractive()
   [[ ! -t 0 &&
      ! -t 1 &&
      ! -t 2 &&
-     -z "${SSH_CONNECTION}" ]]
+     -z "${SSH_CONNECTION-}" ]]
 }
 
 # Autoupdates
