@@ -101,7 +101,7 @@ _ghlr_ghtcli()
   case ${1} in
     install)
       local asset_url=ghtcli
-      local asset_out='ghtcli-${c}'
+      local asset_out='ghtcli-${asset_sha}'
       _latest_commit_raw_asset
       if [[ "$(basename ${BASH_SOURCE[0]})" == ghtcli ]]; then
         if [[ ${KERNEL} == darwin ]]; then
@@ -155,7 +155,7 @@ _ghlr_ctop()
   case ${1} in
     install)
       local ARCH=${ARCH/armv*/arm}
-      local asset_url='${asset}-${t//[^0-9.]}-${KERNEL}-${ARCH}'
+      local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}'
       _latest_release_asset
       ;;
     remove) _remove_asset ;;
@@ -185,10 +185,10 @@ _ghlr_curl()
       local KERNEL=${KERNEL/darwin/macos}
       local asset_ext=tar.xz
       if [[ ${KERNEL} == macos ]]; then
-        local asset_url='${asset}-${KERNEL}-${ARCH}-${t}.${asset_ext}'
+        local asset_url='${asset}-${KERNEL}-${ARCH}-${asset_rel}.${asset_ext}'
       else
-        local asset_url='${asset}-${KERNEL}-${ARCH}-musl-${t}.${asset_ext}'
-        local asset_out='${asset}-${t}-musl-${KERNEL}-${ARCH}'
+        local asset_url='${asset}-${KERNEL}-${ARCH}-musl-${asset_rel}.${asset_ext}'
+        local asset_out='${asset}-${asset_rel}-musl-${KERNEL}-${ARCH}'
       fi
       local asset_tar=curl
       _latest_release_asset
@@ -209,7 +209,7 @@ _ghlr_flux()
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_ext=tar.gz
-      local asset_url='${asset}_${t//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=flux
       _latest_release_asset
       flux completion bash >"${BCD_PATH}"/flux
@@ -230,7 +230,7 @@ _ghlr_fzf()
   case ${1} in
     install)
       local asset_ext=tar.gz
-      local asset_url='${asset}-${t//[^0-9.]}-${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=fzf
       _latest_release_asset
       fzf --bash >"${BCD_PATH}"/fzf
@@ -247,23 +247,15 @@ _ghlr_fzf()
 # helm
 _ghlr_helm()
 {
-  #TODO: make other URLs configurable as well.
   local repo=helm owner=helm asset=helm
   case ${1} in
     install)
       local ARCH=${ARCH/armv7/arm}
-      local t=$(curl -fsSL https://api.github.com/repos/${owner}/${repo}/releases/latest |jq -r '.tag_name')
-      local asset_url="helm-${t}-${KERNEL}-${ARCH}"
-      local asset_out="helm-${t}-${KERNEL}-${ARCH}"
-      curl -fsSLR "https://get.helm.sh/${asset_url}.tar.gz" \
-        --time-cond "${asset_out}".tar.gz \
-        --output "${asset_out}".tar.gz
-      tar xf "${asset_out}".tar.gz --strip-components=1 ${KERNEL}-${ARCH}/helm
-      mv -f helm "${asset_out}"
-      diff "${asset_out}" "${BIN_PATH}"/helm &>/dev/null \
-        || cp -v "${asset_out}" "${BIN_PATH}"/helm
-      chmod +x "${BIN_PATH}"/helm
-      _installed add helm
+      local asset_ext=tar.gz
+      local asset_tar='${KERNEL}-${ARCH}/${asset}'
+      local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_dwl='https://get.helm.sh/${asset_url}'
+      _latest_release_asset
       helm completion bash >"${BCD_PATH}"/helm
       helm completion zsh >"${ZCD_PATH}"/_helm
       helm completion fish >"${FCD_PATH}"/helm.fish
@@ -287,7 +279,7 @@ _ghlr_jq()
       #jq completion bash >"${BCD_PATH}"/jq
       local repo=bash-completion owner=scop asset=jq
       local asset_url=completions/jq
-      local asset_out='${asset}-${c}-scop-bash-completion'
+      local asset_out='${asset}-${asset_sha}-scop-bash-completion'
       local asset_path="${BCD_PATH}"
       _latest_commit_raw_asset
       ;;
@@ -346,7 +338,7 @@ _ghlr_kube_ps1()
     install)
       local asset_branch=master
       local asset_url='${asset}'
-      local asset_out='${asset}-${c}'
+      local asset_out='${asset}-${asset_sha}'
       local asset_path="${LIBEXEC_PATH}"
       rm -vf "${BIN_PATH}"/kube-ps1.sh
       _latest_commit_raw_asset
@@ -361,20 +353,13 @@ _ghlr_kube_ps1()
 # kubectl
 _ghlr_kubectl()
 {
-  #TODO: make other URLs configurable as well.
   local repo=kubectl owner=kubernetes asset=kubectl
   case ${1} in
     install)
       local ARCH=${ARCH/armv*/arm}
-      local t=$(curl -fsSL https://dl.k8s.io/release/stable.txt)
-      local asset_out="kubectl-${t}-${KERNEL}-${ARCH}"
-      curl -fsSLR https://dl.k8s.io/release/${t}/bin/${KERNEL}/${ARCH}/kubectl \
-           --time-cond "${asset_out}" \
-           --output "${asset_out}"
-      diff "${asset_out}" "${BIN_PATH}"/kubectl &>/dev/null \
-        || cp -v "${asset_out}" "${BIN_PATH}"/kubectl
-      chmod +x "${BIN_PATH}"/kubectl
-      _installed add kubectl
+      local asset_rel="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"
+      local asset_dwl='https://dl.k8s.io/release/${asset_rel}/bin/${KERNEL}/${ARCH}/${asset}'
+      _latest_release_asset
       kubectl completion bash >"${BCD_PATH}"/kubectl
       kubectl completion zsh >"${ZCD_PATH}"/_kubectl
       kubectl completion fish >"${FCD_PATH}"/kubectl.fish
@@ -394,19 +379,19 @@ _ghlr_kubectx()
     install)
       local ARCH=${ARCH/amd64/x86_64}
       local asset_ext=tar.gz
-      local asset_url='kubectx_${t}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_url='kubectx_${asset_rel}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=kubectx
       _latest_release_asset
       #ktx completion bash >"${BCD_PATH}"/ktx
       local asset_url=completion/kubectx.bash
-      local asset_out='ktx-${t}-bash-completion-${c}'
+      local asset_out='ktx-${asset_rel}-bash-completion-${asset_sha}'
       local asset_path="${BCD_PATH}"
       _latest_release_raw_asset
       sed 's/^\(complete -F _kube_contexts kubectx kctx\)$/\1 ktx/' \
         ktx-*-bash-completion-!(*.etag) "${BCD_PATH}"/ktx
       #ktx completion zsh >"${ZCD_PATH}"/_ktx
       local asset_url=completion/_kubectx.zsh
-      local asset_out='ktx-${t}-zsh-completion-${c}'
+      local asset_out='ktx-${asset_rel}-zsh-completion-${asset_sha}'
       local asset_path="${ZCD_PATH}"
       local asset=_ktx
       _latest_release_raw_asset
@@ -414,7 +399,7 @@ _ghlr_kubectx()
         ktx-*-zsh-completion-!(*.etag) "${ZCD_PATH}"/_ktx
       #ktx completion fish >"${FCD_PATH}"/ktx.fish
       local asset_url=completion/kubectx.fish
-      local asset_out='ktx-${t}-fish-completion-${c}'
+      local asset_out='ktx-${asset_rel}-fish-completion-${asset_sha}'
       local asset_path="${FCD_PATH}"
       local asset=ktx.fish
       _latest_release_raw_asset
@@ -436,23 +421,23 @@ _ghlr_kubens()
     install)
       local ARCH=${ARCH/amd64/x86_64}
       local asset_ext=tar.gz
-      local asset_url='kubens_${t}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_url='kubens_${asset_rel}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=kubens
       _latest_release_asset
       #kns completion bash >"${BCD_PATH}"/kns
       local asset_url=completion/kubens.bash
-      local asset_out='kns-${t}-bash-completion-${c}'
+      local asset_out='kns-${asset_rel}-bash-completion-${asset_sha}'
       local asset_path="${BCD_PATH}"
       _latest_release_raw_asset
       #kns completion zsh >"${ZCD_PATH}"/_kns
       local asset_url=completion/_kubens.zsh
-      local asset_out='kns-${t}-zsh-completion-${c}'
+      local asset_out='kns-${asset_rel}-zsh-completion-${asset_sha}'
       local asset_path="${ZCD_PATH}"
       local asset=_kns
       _latest_release_raw_asset
       #kns completion fish >"${FCD_PATH}"/kns.fish
       local asset_url=completion/kubens.fish
-      local asset_out='kns-${t}-fish-completion-${c}'
+      local asset_out='kns-${asset_rel}-fish-completion-${asset_sha}'
       local asset_path="${FCD_PATH}"
       local asset=kns.fish
       _latest_release_raw_asset
@@ -469,21 +454,13 @@ _ghlr_kubens()
 # minio mc
 _ghlr_mc()
 {
-  #TODO: make other URLs configurable as well.
   local repo=mc owner=minio asset=mc
   case ${1} in
     install)
       local ARCH=${ARCH/armv7/arm}
-      local t=$(curl -fsSL https://api.github.com/repos/${owner}/${repo}/releases/latest |jq -r '.tag_name')
       local asset_url="${KERNEL}-${ARCH}/mc"
-      local asset_out="mc-${t}-${KERNEL}-${ARCH}"
-      curl -fsSLR "https://dl.min.io/client/mc/release/${asset_url}" \
-           --time-cond "${asset_out}" \
-           --output "${asset_out}"
-      diff "${asset_out}" "${BIN_PATH}"/mc &>/dev/null \
-        || cp -v "${asset_out}" "${BIN_PATH}"/mc
-      chmod +x "${BIN_PATH}"/mc
-      _installed add mc
+      local asset_dwl='https://dl.min.io/client/mc/release/${asset_url}'
+      _latest_release_asset
       #SHELL=bash mc --autocompletion >/dev/null
       printf '%s\n' "complete -C ${BIN_PATH@Q}/mc mc" >"${BCD_PATH}"/mc
       SHELL=zsh mc --autocompletion >/dev/null
@@ -508,8 +485,8 @@ _ghlr_rclone()
       local ARCH=${ARCH/armv5/arm-v5}
       local ARCH=${ARCH/i386/386}
       local asset_ext=zip
-      local asset_url='${asset}-${t}-${KERNEL}-${ARCH}.${asset_ext}'
-      local asset_zip='${asset}-${t}-${KERNEL}-${ARCH}/${asset}'
+      local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_zip='${asset}-${asset_rel}-${KERNEL}-${ARCH}/${asset}'
       _latest_release_asset
       rclone completion bash "${BCD_PATH}"/rclone
       rclone completion zsh "${ZCD_PATH}"/_rclone
@@ -548,7 +525,7 @@ _ghlr_stern()
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_ext=tar.gz
-      local asset_url='${asset}_${t//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=stern
       _latest_release_asset
       stern --completion bash >"${BCD_PATH}"/stern
@@ -612,7 +589,7 @@ _ghlr_talos_ps1()
   case ${1} in
     install)
       local asset_url='${asset}'
-      local asset_out='${asset}-${c}'
+      local asset_out='${asset}-${asset_sha}'
       local asset_path="${LIBEXEC_PATH}"
       rm -vf "${BIN_PATH}"/talos-ps1.sh
       _latest_commit_raw_asset
@@ -651,7 +628,7 @@ _ghlr_ttx()
   case ${1} in
     install)
       local asset_url='${asset}'
-      local asset_out='${asset}-${c}'
+      local asset_out='${asset}-${asset_sha}'
       _latest_commit_raw_asset
       ;;
     remove) _remove_asset ;;
@@ -669,8 +646,8 @@ _ghlr_velero()
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_ext=tar.gz
-      local asset_url='${asset}-${t}-${KERNEL}-${ARCH}.${asset_ext}'
-      local asset_tar='${asset}-${t}-${KERNEL}-${ARCH}/${asset}'
+      local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_tar='${asset}-${asset_rel}-${KERNEL}-${ARCH}/${asset}'
       _latest_release_asset
       velero completion bash >"${BCD_PATH}"/velero
       velero completion zsh >"${ZCD_PATH}"/_velero
@@ -718,38 +695,46 @@ _latest_release_asset()
   # owner        : owner namespace (mandatory)
   # repo         : repo name (mandatory)
   # asset        : asset name (mandatory)
-  # asset_tar    : asset name within tar archive (optional)    # default : ''
-  # asset_zip    : asset name within zip archive (optional)    # default : ''
-  # asset_ext    : asset file extension used in url (optional) # default : ''
-  # asset_url    : asset name used in url (optional)           # default : ${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}
-  # asset_out    : asset name used as output (optional)        # default : ${asset}-${t}-${KERNEL}-${ARCH}
+  # asset_tar    : asset name within tar archive  # default : ''
+  # asset_zip    : asset name within zip archive  # default : ''
+  # asset_ext    : asset file extension           # default : ''
+  # asset_url    : asset name used in url         # default : ${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}
+  # asset_out    : asset name used as output      # default : ${asset}-${asset_rel}-${KERNEL}-${ARCH}
+  # asset_rel    : asset release name             # default : $(curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" |jq -r '.tag_name')
+  # asset_dwl    : asset download url             # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
 
   # latest
-  if command -v jq &>/dev/null; then
-    local t=$( \
-      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
-        |jq -r '.tag_name'
-    )
-  else
-    local t=$( \
-      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
-        |awk -F\" '/"tag_name":/{print$(NF-1)}'
-    )
+  if [[ -z "${asset_rel-}" ]]; then
+    if command -v jq &>/dev/null; then
+      local asset_rel=$( \
+        curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+          |jq -r '.tag_name'
+      )
+    else
+      local asset_rel=$( \
+        curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+          |awk -F\" '/"tag_name":/{print$(NF-1)}'
+      )
+    fi
   fi
 
   # download
-  local asset_url="${asset_url-}" asset_out="${asset_out-}" local asset_ext="${asset_ext-}"
+  local asset_ext="${asset_ext-}"
+  local asset_url="${asset_url-}"
+  local asset_out="${asset_out-}"
+  local asset_dwl="${asset_dwl-}"
   eval "asset_ext=\"${asset_ext}\""
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}}\""
-  eval "asset_out=\"${asset_out:-${asset}-${t}-${KERNEL}-${ARCH}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${asset_rel}-${KERNEL}-${ARCH}}\""
+  eval "asset_dwl=\"${asset_dwl:-https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
-    curl -fsSLR "https://github.com/${owner}/${repo}/releases/download/${t}/${asset_url}" \
+    curl -fsSLR "${asset_dwl}" \
          --etag-save "${asset_out}${asset_ext:+.${asset_ext#.}}".etag \
          --etag-compare "${asset_out}${asset_ext:+.${asset_ext#.}}".etag \
          --time-cond "${asset_out}${asset_ext:+.${asset_ext#.}}" \
          --output "${asset_out}${asset_ext:+.${asset_ext#.}}"
   else
-    curl -fsSLR "https://github.com/${owner}/${repo}/releases/download/${t}/${asset_url}" \
+    curl -fsSLR "${asset_dwl}" \
          --time-cond "${asset_out}${asset_ext:+.${asset_ext#.}}" \
          --output "${asset_out}${asset_ext:+.${asset_ext#.}}"
   fi
@@ -778,31 +763,41 @@ _latest_release_raw_asset()
   # owner        : owner namespace (mandatory)
   # repo         : repo name (mandatory)
   # asset        : asset name (mandatory)
-  # asset_url    : asset name used in url (optional)         # default : ${asset}-${KERNEL}-${ARCH}
-  # asset_out    : asset name used as output (optional)      # default : ${asset}-${t}-${KERNEL}-${ARCH}-${c}
+  # asset_url    : asset name used in url     # default : ${asset}-${KERNEL}-${ARCH}
+  # asset_out    : asset name used as output  # default : ${asset}-${asset_rel}-${KERNEL}-${ARCH}-${asset_sha}
+  # asset_rel    : asset release name         # default : $(curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" |jq -r '.tag_name')
+  # asset_sha    : asset commit hash          # default : $(curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${asset_rel}" |jq -r '.object.sha[:7]')
+  # asset_dwl    : asset download url         # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
 
   # latest
-  local t=$( \
-    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
-      |jq -r '.tag_name'
-  )
-  local c=$( \
-    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${t}" \
-      |jq -r '.object.sha[:7]'
-  )
+  if [[ -z "${asset_rel-}" ]]; then
+    local asset_rel=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" \
+        |jq -r '.tag_name'
+    )
+  fi
+  if [[ -z "${asset_sha-}" ]]; then
+    local asset_sha=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${asset_rel}" \
+        |jq -r '.object.sha[:7]'
+    )
+  fi
 
   # download
-  local asset_url="${asset_url-}" asset_out="${asset_out-}"
+  local asset_url="${asset_url-}"
+  local asset_out="${asset_out-}"
+  local asset_dwl="${asset_dwl-}"
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
-  eval "asset_out=\"${asset_out:-${asset}-${t}-${KERNEL}-${ARCH}-${c}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${asset_rel}-${KERNEL}-${ARCH}-${asset_sha}}\""
+  eval "asset_dwl=\"${asset_dwl:-https://raw.githubusercontent.com/${owner}/${repo}/${asset_sha}/${asset_url}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
-    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+    curl -fsSLR "${asset_dwl}" \
          --etag-save "${asset_out}".etag \
          --etag-compare "${asset_out}".etag \
          --time-cond "${asset_out}" \
          --output "${asset_out}"
   else
-    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+    curl -fsSLR "${asset_dwl}" \
          --time-cond "${asset_out}" \
          --output "${asset_out}"
   fi
@@ -816,29 +811,37 @@ _latest_commit_raw_asset()
   # owner        : owner namespace (mandatory)
   # repo         : repo name (mandatory)
   # asset        : asset name (mandatory)
-  # asset_tar    : asset name within tar file (optional)     # default : unset
-  # asset_branch : asset branch (rawfile only and mandatory) # default : main
-  # asset_url    : asset name used in url (optional)         # default : ${asset}-${KERNEL}-${ARCH}
-  # asset_out    : asset name used as output (optional)      # default : ${asset}-(${c}-${KERNEL}-${ARCH}
+  # asset_tar    : asset name within tar file # default : ''
+  # asset_branch : asset branch               # default : main
+  # asset_url    : asset name used in url     # default : ${asset}-${KERNEL}-${ARCH}
+  # asset_out    : asset name used as output  # default : ${asset}-(${asset_sha}-${KERNEL}-${ARCH}
+  # asset_sha    : asset commit hash          # default : $(curl -fsSL "https://api.github.com/repos/${owner}/${repo}/commits/heads/${asset_branch:-main}" |jq -r '.sha[:7]')
+  # asset_dwl    : asset download url         # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
+
 
   # latest
-  local c=$( \
-    curl -fsSL "https://api.github.com/repos/${owner}/${repo}/commits/heads/${asset_branch:-main}" \
-      |jq -r '.sha[:7]'
-  )
+  if [[ -z "${asset_sha-}" ]]; then
+    local asset_sha=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/commits/heads/${asset_branch:-main}" \
+        |jq -r '.sha[:7]'
+    )
+  fi
 
   # download
-  local asset_url="${asset_url-}" asset_out="${asset_out-}"
+  local asset_url="${asset_url-}"
+  local asset_out="${asset_out-}"
+  local asset_dwl="${asset_dwl-}"
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
-  eval "asset_out=\"${asset_out:-${asset}-${c}-${KERNEL}-${ARCH}}\""
+  eval "asset_out=\"${asset_out:-${asset}-${asset_sha}-${KERNEL}-${ARCH}}\""
+  eval "asset_dwl=\"${asset_dwl:-https://raw.githubusercontent.com/${owner}/${repo}/${asset_sha}/${asset_url}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
-    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+    curl -fsSLR "${asset_dwl}" \
          --etag-save "${asset_out}".etag \
          --etag-compare "${asset_out}".etag \
          --time-cond "${asset_out}" \
          --output "${asset_out}"
   else
-    curl -fsSLR https://raw.githubusercontent.com/${owner}/${repo}/${c}/${asset_url} \
+    curl -fsSLR "${asset_dwl}" \
          --time-cond "${asset_out}" \
          --output "${asset_out}"
   fi
