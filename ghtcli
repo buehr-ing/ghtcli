@@ -112,7 +112,7 @@ _ghlr_ghtcli()
         if [[ $(( $(date +%s) - ${msec} )) -eq 0 ]]; then
           printf '%s %s\n' \
             "${_clr_orange}ghtcli${_clr_reset}" \
-            "${_clr_blue}Restarting with updated version..${_clr_reset}"
+            "${_clr_blue}Reloading with updated version..${_clr_reset}"
           exec "${SCRIPT_DIRNAME}"/ghtcli "${SCRIPT_ARGS[@]}"
         fi
       fi
