@@ -740,7 +740,8 @@ _latest_release_asset()
   fi
 
   # extract
-  local asset_tar="${asset_tar-}" asset_zip="${asset_zip-}"
+  local asset_tar="${asset_tar-}"
+  local asset_zip="${asset_zip-}"
   if [[ -n "${asset_tar}" ]]; then
     eval "asset_tar=\"${asset_tar}\""
     tar -xf "${asset_out}${asset_ext:+.${asset_ext#.}}" \
@@ -1059,12 +1060,12 @@ _autoupdate()
       ;;
     mar*) # manages markers
       if [[ -e "${CFG_PATH}"/autoupdate ]]; then
-        local h=$(head -n1 "${CFG_PATH}"/autoupdate)
-        if [[ $(hostname -f) != ${h-} ]]; then
+        local hostname=$(head -n1 "${CFG_PATH}"/autoupdate)
+        if [[ $(hostname -f) != ${hostname-} ]]; then
           printf '%s %s %s\n' \
             "${_clr_red}Autoupdate${_clr_reset}" \
             "${_clr_blue}is already enabled on host" \
-            "${_clr_orange}${h:-🚫 ${_clr_red}marker is empty}${_clr_reset}"
+            "${_clr_orange}${hostname:-🚫 ${_clr_red}marker is empty}${_clr_reset}"
             >&2
           return 1
         fi
