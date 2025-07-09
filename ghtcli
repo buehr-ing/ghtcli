@@ -497,6 +497,26 @@ _ghlr_mc()
   esac
 }
 
+# opentofu
+_ghlr_opentofu()
+{
+  local repo=opentofu owner=opentofu asset=tofu
+  case ${1} in
+    install)
+      local ARCH=${ARCH/armv*/arm}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=tofu
+      _latest_release_asset
+      tofu -install-autocomplete 2>/dev/null ||:
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
 # rclone
 _ghlr_rclone()
 {
