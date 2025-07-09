@@ -748,7 +748,10 @@ _ghlr_terraform()
       _latest_release_asset
       terraform -install-autocomplete 2>/dev/null ||:
       ;;
-    remove) _remove_asset ;;
+    remove)
+      terraform -uninstall-autocomplete 2>/dev/null ||:
+      _remove_asset
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
@@ -769,7 +772,10 @@ _ghlr_vault()
       _latest_release_asset
       vault -autocomplete-install 2>/dev/null ||:
       ;;
-    remove) _remove_asset ;;
+    remove)
+      vault -autocomplete-uninstall 2>/dev/null ||:
+      _remove_asset
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
