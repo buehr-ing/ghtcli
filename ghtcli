@@ -1082,15 +1082,27 @@ _autoupdate()
 # List application groups
 _list()
 {
-  all_groups="$(compgen -v _ghlr_ |awk '{sub(/^_ghlr_/, ""); print}')"
-  for i in ${@:-${all_groups}}; do
-    group_list="$(_resolve ${i})"
-    if [[ -z "${group_list}" ]]; then
+  local maxcols=15
+  local all_groups="$(compgen -v _ghlr_ |awk '{sub(/^_ghlr_/, ""); print}')"
+  for group in ${@:-${all_groups}}; do
+    items=($(_resolve ${group} |tr '\n' ' '))
+    if (( ${#items[@]} == 0 )); then
       continue
     fi
-    printf '%-30s\t%s\n' \
-      "${_clr_orange}${i}${_clr_reset}" \
-      "${_clr_blue}$(printf '%s ' ${group_list})${_clr_reset}"
+    for (( i=0; i<${#items[@]}; i+=maxcols )); do
+      chunk=(${items[@]:i:maxcols})
+      if (( i == 0 )); then
+        printf '%-30s\t' \
+          "${_clr_orange}${group}${_clr_reset}"
+      else
+        printf '%s\t\t' ''
+      fi
+      for item in ${chunk[@]}; do
+        printf '%s ' \
+          "${_clr_blue}${item}${_clr_reset}"
+      done
+      printf '\n'
+    done
   done
 }
 
