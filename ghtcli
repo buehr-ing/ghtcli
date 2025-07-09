@@ -115,6 +115,7 @@ _ghlr_ghtcli()
           printf '%s %s\n' \
             "${_clr_orange}ghtcli${_clr_reset}" \
             "${_clr_blue}Reloading with updated version..${_clr_reset}"
+          sleep 1s
           exec "${SCRIPT_DIRNAME}"/ghtcli "${SCRIPT_ARGS[@]}"
         fi
       fi
