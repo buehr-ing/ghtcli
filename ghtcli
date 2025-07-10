@@ -475,6 +475,30 @@ _ghlr_kubens()
   esac
 }
 
+# kustomize
+_ghlr_kustomize()
+{
+  local repo=kustomize owner=kubernetes-sigs asset=kustomize
+  case ${1} in
+    install)
+      # asset_rhel (.tag_name) = kustomize/v1.2.3
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^v0-9.]}_${KERNEL^}_${ARCH}.${asset_ext}'
+      local asset_dwl='https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}'
+      local asset_out='${asset}-${asset_rel//[^v0-9.]}-${KERNEL}-${ARCH}'
+      local asset_tar=kustomize
+      _latest_release_asset
+      kustomize completion bash >"${BCD_PATH}"/kustomize
+      kustomize completion zsh >"${ZCD_PATH}"/_kustomize
+      kustomize completion fish >"${FCD_PATH}"/kustomize.fish
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
 # minio mc
 _ghlr_mc()
 {
