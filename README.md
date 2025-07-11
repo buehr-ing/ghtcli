@@ -58,6 +58,7 @@ This does **not** apply to commands that don't take `<tools>` (e.g., `update`, `
 
 ```bash
 ghtcli install <tools>
+ghtcli completion <tools>
 ghtcli remove <tools>
 ghtcli clean <tools> # Clean up cached downloads
 ghtcli list <tools>  # Show all available tools and groups
