@@ -214,9 +214,12 @@ _ghlr_doctl()
       local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_tar=doctl
       _latest_release_asset
-      doctl completion bash >"${BCD_PATH}"/doctl
-      doctl completion zsh >"${ZCD_PATH}"/_doctl
-      doctl completion fish >"${FCD_PATH}"/doctl.fish
+      if ! _noninteractive; then
+        # fails in non-interactive mode due to cgroup checks
+        doctl completion bash >"${BCD_PATH}"/doctl
+        doctl completion zsh >"${ZCD_PATH}"/_doctl
+        doctl completion fish >"${FCD_PATH}"/doctl.fish
+      fi
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
