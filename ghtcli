@@ -120,6 +120,7 @@ _ghlr_ghtcli()
         fi
       fi
       ;;
+    completion) true ;;
     remove)
       _autoupdate disable
       rmdir -v "${CFG_PATH}" ||:
@@ -140,6 +141,8 @@ _ghlr_cmctl()
       local ARCH=${ARCH/armv*/arm}
       local asset_url='${asset}_${KERNEL}_${ARCH}'
       _latest_release_asset
+      ;;
+    completion)
       cmctl completion bash >"${BCD_PATH}"/cmctl
       cmctl completion zsh >"${ZCD_PATH}"/_cmctl
       cmctl completion fsh >"${FCD_PATH}"/cmctl.fish
@@ -161,6 +164,7 @@ _ghlr_ctop()
       local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}'
       _latest_release_asset
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -197,6 +201,7 @@ _ghlr_curl()
       _latest_release_asset
       hash -d curl
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -214,6 +219,8 @@ _ghlr_doctl()
       local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_tar=doctl
       _latest_release_asset
+      ;;
+    completion)
       if ! _noninteractive; then
         # fails in non-interactive mode due to cgroup checks
         doctl completion bash >"${BCD_PATH}"/doctl
@@ -239,6 +246,8 @@ _ghlr_flux()
       local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=flux
       _latest_release_asset
+      ;;
+    completion)
       flux completion bash >"${BCD_PATH}"/flux
       flux completion zsh >"${ZCD_PATH}"/_flux
       flux completion fish >"${FCD_PATH}"/flux.fish
@@ -260,6 +269,8 @@ _ghlr_fzf()
       local asset_url='${asset}-${asset_rel//[^0-9.]}-${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=fzf
       _latest_release_asset
+      ;;
+    completion)
       fzf --bash >"${BCD_PATH}"/fzf
       fzf --zsh >"${ZCD_PATH}"/_fzf
       fzf --fish >"${FCD_PATH}"/fzf.fish
@@ -283,6 +294,8 @@ _ghlr_helm()
       local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_dwl='https://get.helm.sh/${asset_url}'
       _latest_release_asset
+      ;;
+    completion)
       helm completion bash >"${BCD_PATH}"/helm
       helm completion zsh >"${ZCD_PATH}"/_helm
       helm completion fish >"${FCD_PATH}"/helm.fish
@@ -303,6 +316,8 @@ _ghlr_jq()
       local ARCH=${ARCH/386/i386}
       local KERNEL=${KERNEL/darwin/macos}
       _latest_release_asset
+      ;;
+    completion)
       #jq completion bash >"${BCD_PATH}"/jq
       local repo=bash-completion owner=scop asset=jq
       local asset_url=completions/jq
@@ -327,6 +342,8 @@ _ghlr_k9s()
       local asset_url='${asset}_${KERNEL^}_${ARCH}.${asset_ext}'
       local asset_tar=k9s
       _latest_release_asset
+      ;;
+    completion)
       k9s completion bash >"${BCD_PATH}"/k9s
       k9s completion zsh >"${ZCD_PATH}"/_k9s
       k9s completion fish >"${FCD_PATH}"/k9s.fish
@@ -350,6 +367,7 @@ _ghlr_krew()
       local asset_tar='./krew-${KERNEL}_${ARCH}'
       _latest_release_asset
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -370,6 +388,7 @@ _ghlr_kube_ps1()
       rm -vf "${BIN_PATH}"/kube-ps1.sh
       _latest_commit_raw_asset
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -387,6 +406,8 @@ _ghlr_kubectl()
       local asset_rel="$(curl -fsSL https://dl.k8s.io/release/stable.txt)"
       local asset_dwl='https://dl.k8s.io/release/${asset_rel}/bin/${KERNEL}/${ARCH}/${asset}'
       _latest_release_asset
+      ;;
+    completion)
       kubectl completion bash >"${BCD_PATH}"/kubectl
       kubectl completion zsh >"${ZCD_PATH}"/_kubectl
       kubectl completion fish >"${FCD_PATH}"/kubectl.fish
@@ -409,6 +430,8 @@ _ghlr_kubectx()
       local asset_url='kubectx_${asset_rel}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=kubectx
       _latest_release_asset
+      ;;
+    completion)
       #ktx completion bash >"${BCD_PATH}"/ktx
       local asset_url=completion/kubectx.bash
       local asset_out='ktx-${asset_rel}-bash-completion-${asset_sha}'
@@ -451,6 +474,8 @@ _ghlr_kubens()
       local asset_url='kubens_${asset_rel}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=kubens
       _latest_release_asset
+      ;;
+    completion)
       #kns completion bash >"${BCD_PATH}"/kns
       local asset_url=completion/kubens.bash
       local asset_out='kns-${asset_rel}-bash-completion-${asset_sha}'
@@ -491,6 +516,8 @@ _ghlr_kustomize()
       local asset_out='${asset}-${asset_rel//[^v0-9.]}-${KERNEL}-${ARCH}'
       local asset_tar=kustomize
       _latest_release_asset
+      ;;
+    completion)
       kustomize completion bash >"${BCD_PATH}"/kustomize
       kustomize completion zsh >"${ZCD_PATH}"/_kustomize
       kustomize completion fish >"${FCD_PATH}"/kustomize.fish
@@ -512,6 +539,8 @@ _ghlr_mc()
       local asset_url="${KERNEL}-${ARCH}/mc"
       local asset_dwl='https://dl.min.io/client/mc/release/${asset_url}'
       _latest_release_asset
+      ;;
+    completion)
       #SHELL=bash mc --autocompletion >/dev/null
       printf '%s\n' "complete -C ${BIN_PATH@Q}/mc mc" >"${BCD_PATH}"/mc
       SHELL=zsh mc --autocompletion >/dev/null
@@ -536,6 +565,8 @@ _ghlr_openbao()
       local asset_tar=bao
       _installed del openbao_hsm
       _latest_release_asset
+      ;;
+    completion)
       bao -autocomplete-install 2>/dev/null ||:
       ;;
     remove)
@@ -561,6 +592,8 @@ _ghlr_openbao_hsm()
       local asset_tar=bao
       _installed del openbao
       _latest_release_asset
+      ;;
+    completion)
       bao -autocomplete-install 2>/dev/null ||:
       ;;
     remove)
@@ -584,6 +617,8 @@ _ghlr_opentofu()
       local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=tofu
       _latest_release_asset
+      ;;
+    completion)
       tofu -install-autocomplete 2>/dev/null ||:
       ;;
     remove)
@@ -611,6 +646,8 @@ _ghlr_rclone()
       local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_zip='${asset}-${asset_rel}-${KERNEL}-${ARCH}/${asset}'
       _latest_release_asset
+      ;;
+    completion)
       rclone completion bash "${BCD_PATH}"/rclone
       rclone completion zsh "${ZCD_PATH}"/_rclone
       rclone completion fish "${FCD_PATH}"/rclone.fish
@@ -629,6 +666,8 @@ _ghlr_skopeo()
   case ${1} in
     install)
       _latest_release_asset
+      ;;
+    completion)
       skopeo completion bash >"${BCD_PATH}"/skopeo
       skopeo completion zsh >"${ZCD_PATH}"/_skopeo
       skopeo completion fish >"${FCD_PATH}"/skopeo.fish
@@ -651,6 +690,8 @@ _ghlr_stern()
       local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=stern
       _latest_release_asset
+      ;;
+    completion)
       stern --completion bash >"${BCD_PATH}"/stern
       stern --completion zsh >"${ZCD_PATH}"/_stern
       stern --completion fish >"${FCD_PATH}"/stern.fish
@@ -672,6 +713,8 @@ _ghlr_talhelper()
       local asset_url='${asset}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=talhelper
       _latest_release_asset
+      ;;
+    completion)
       talhelper completion bash >"${BCD_PATH}"/talhelper
       talhelper completion zsh >"${ZCD_PATH}"/_talhelper
       talhelper completion fish >"${FCD_PATH}"/talhelper.fish
@@ -694,6 +737,8 @@ _ghlr_talm()
       local asset_url='${asset}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_tar=talm
       _latest_release_asset
+      ;;
+    completion)
       talm completion bash >"${BCD_PATH}"/talm
       talm completion zsh >"${ZCD_PATH}"/_talm
       talm completion fish >"${FCD_PATH}"/talm.fish
@@ -719,6 +764,7 @@ _ghlr_talos_ps1()
       sed 's/printf "$output"/printf '\''%b'\'' "$output"/' \
         talos-ps1.sh-!(*.etag) "${LIBEXEC_PATH}"/talos-ps1.sh
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -733,6 +779,8 @@ _ghlr_talosctl()
   case ${1} in
     install)
       _latest_release_asset
+      ;;
+    completion)
       talosctl completion bash >"${BCD_PATH}"/talosctl
       talosctl completion zsh >"${ZCD_PATH}"/_talosctl
       talosctl completion fish >"${FCD_PATH}"/talosctl.fish
@@ -754,6 +802,7 @@ _ghlr_ttx()
       local asset_out='${asset}-${asset_sha}'
       _latest_commit_raw_asset
       ;;
+    completion) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -773,6 +822,8 @@ _ghlr_terraform()
       local asset_dwl='https://releases.hashicorp.com/${asset}/${asset_rel//[^0-9.]}/${asset_url}'
       local asset_zip=terraform
       _latest_release_asset
+      ;;
+    completion)
       terraform -install-autocomplete 2>/dev/null ||:
       ;;
     remove)
@@ -797,6 +848,8 @@ _ghlr_vault()
       local asset_dwl='https://releases.hashicorp.com/${asset}/${asset_rel//[^0-9.]}/${asset_url}'
       local asset_zip=vault
       _latest_release_asset
+      ;;
+    completion)
       vault -autocomplete-install 2>/dev/null ||:
       ;;
     remove)
@@ -820,6 +873,8 @@ _ghlr_velero()
       local asset_url='${asset}-${asset_rel}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_tar='${asset}-${asset_rel}-${KERNEL}-${ARCH}/${asset}'
       _latest_release_asset
+      ;;
+    completion)
       velero completion bash >"${BCD_PATH}"/velero
       velero completion zsh >"${ZCD_PATH}"/_velero
       velero completion fish >"${FCD_PATH}"/velero.fish
@@ -839,6 +894,8 @@ _ghlr_yq()
     install)
       local asset_url='${asset}_${KERNEL}_${ARCH}'
       _latest_release_asset
+      ;;
+    completion)
       yq shell-completion bash >"${BCD_PATH}"/yq
       yq shell-completion zsh >"${ZCD_PATH}"/_yq
       yq shell-completion fish >"${FCD_PATH}"/yq.fish
@@ -1038,6 +1095,7 @@ _install_asset()
     elif [[ "${asset_path}" == "${FCD_PATH}" ]]; then
       chmod a-x "${asset_path}/${asset}"
     fi
+    ${FUNCNAME[2]} completion
   fi
   _installed add ${FUNCNAME[2]#_ghlr_}
 }
@@ -1290,6 +1348,7 @@ _usage()
 {
   cat <<-__USAGE__
 		ghtcli install <tools>             # Install selected or all tools
+		ghtcli completion <tools>          # Completion for selected or all tools
 		ghtcli remove <tools>              # Remove selected or all tools
 		ghtcli clean <tools>               # Clean up cached downloads
 		ghtcli list <tools>                # Show all available tools or groups
@@ -1342,6 +1401,11 @@ while :; do
       _dependencies jq
       for i in $(_resolve ${@:-_all}); do
         _ghlr_${i} install
+      done
+      break ;;
+    com*) # completion
+      for i in $(_resolve ${@:-_all}); do
+        _ghlr_${i} completion
       done
       break ;;
     upd*) # update
