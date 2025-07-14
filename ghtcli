@@ -1311,7 +1311,7 @@ _autoupdate()
 # List application groups
 _list()
 {
-  local maxcols=15
+  local maxcols=5
   local all_groups="$(compgen -v _ghlr_ |awk '{sub(/^_ghlr_/, ""); print}')"
   for group in ${@:-${all_groups}}; do
     items=($(_resolve ${group} |tr '\n' ' '))
