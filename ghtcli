@@ -1081,13 +1081,12 @@ _latest_commit_raw_asset()
 
 _install_asset()
 {
-  local copied completion
   local asset_path="${asset_path:-${BIN_PATH}}"
   if ! _noninteractive; then
     printf '%s ' "${_clr_orange}${FUNCNAME[2]#_ghlr_}${_clr_reset}"
   fi
   if ! diff "${asset_out}" "${asset_path}/${asset}" &>/dev/null; then
-    copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
+    local copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
     if [[ "${asset_path}" == "${BIN_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
     elif [[ "${asset_path}" == "${LIBEXEC_PATH}" ]]; then
@@ -1104,11 +1103,11 @@ _install_asset()
     printf '%s\n' \
     "${_clr_blue}${copied:-"'${asset_out}' -> 'up-to-date'"}${_clr_reset}"
   else
-    printf '%s\n' "${copied}"
+    printf '%s\n' "${copied-}"
   fi
-  if [[ -z "${completion}" ]]; then
-    if [[ -n "${copied}" ]]; then
-      completion=called
+  if [[ -z "${completion-}" ]]; then
+    if [[ -n "${copied-}" ]]; then
+      local completion=called
       ${FUNCNAME[2]} completion
     fi
     _installed add ${FUNCNAME[2]#_ghlr_}
