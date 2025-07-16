@@ -1081,12 +1081,13 @@ _latest_commit_raw_asset()
 
 _install_asset()
 {
+  local copied completion
   local asset_path="${asset_path:-${BIN_PATH}}"
   if ! _noninteractive; then
     printf '%-30s\t' "${_clr_orange}${FUNCNAME[2]#_ghlr_}${_clr_reset}"
   fi
   if ! diff "${asset_out}" "${asset_path}/${asset}" &>/dev/null; then
-    local copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
+    copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
     if [[ "${asset_path}" == "${BIN_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
     elif [[ "${asset_path}" == "${LIBEXEC_PATH}" ]]; then
@@ -1099,10 +1100,15 @@ _install_asset()
       chmod a-x "${asset_path}/${asset}"
     fi
   fi
-  printf '%s\n' "${_clr_blue}${copied:-$(_noninteractive || printf "'${asset_out}'")}${_clr_reset}"
-  if [[ -z "${completion-}" ]]; then
-    if [[ -n "${copied-}" ]]; then
-      local completion=called
+  if ! _noninteractive; then
+    printf '%s\n' \
+    "${_clr_blue}${copied:-"'${asset_out}' -> 'up-to-date'"}${_clr_reset}"
+  else
+    printf '%s\n' "${copied}"
+  fi
+  if [[ -z "${completion}" ]]; then
+    if [[ -n "${copied}" ]]; then
+      completion=called
       ${FUNCNAME[2]} completion
     fi
     _installed add ${FUNCNAME[2]#_ghlr_}
@@ -1358,7 +1364,7 @@ _usage()
   cat <<-__USAGE__
 		ghtcli install <tools>             # Install selected or all tools
 		ghtcli completion <tools>          # Completion for selected or all tools
-		ghtcli remove <tools>              # Remove selected or all tools
+		ghtcli remove --force <tools>      # Remove selected or all tools
 		ghtcli clean <tools>               # Clean up cached downloads
 		ghtcli list <tools>                # Show all available tools or groups
 		ghtcli info <tools>                # Show GitHub metadata for tools
@@ -1433,9 +1439,16 @@ while :; do
       fi
       break ;;
     rem*|rm) # remove
-      for i in $(_installed rmdiff ${@:-_all}); do
-        _ghlr_${i} remove
-      done
+      if [[ "${1:1:2}" == '-f' ]]; then
+        shift ||:
+        for i in $(_resolve ${@:-$(_installed list)}); do
+          _ghlr_${i} remove
+        done
+      else
+        for i in $(_installed rmdiff ${@:-_all}); do
+          _ghlr_${i} remove
+        done
+      fi
       _installed autoclean
       break ;;
     cle*) # clean
