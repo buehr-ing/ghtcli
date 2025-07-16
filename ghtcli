@@ -1102,8 +1102,8 @@ _install_asset()
   printf '%s\n' "${_clr_blue}${copied:-$(_noninteractive || printf "'${asset_out}'")}${_clr_reset}"
   if [[ -z "${completion-}" ]]; then
     if [[ -n "${copied-}" ]]; then
+      local completion=called
       ${FUNCNAME[2]} completion
-      local completion=done
     fi
     _installed add ${FUNCNAME[2]#_ghlr_}
   fi
