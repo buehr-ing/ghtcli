@@ -2,7 +2,7 @@
 
 # Error handling
 set -eEuo pipefail
-trap 'printf "%s\n" "💥 Error on line ${LINENO} while running: ${BASH_COMMAND}" >&2; exit 1' ERR
+trap 'printf "\n%s\n" "💥 Error on line ${LINENO} while running: ${BASH_COMMAND}" >&2; exit 1' ERR
 
 if (( BASH_VERSINFO[0] < 4 ||
       (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4) )); then
@@ -136,7 +136,7 @@ _ghlr_ghtcli()
 _ghlr_cmctl()
 {
   local repo=cmctl owner=cert-manager asset=cmctl
-  case ${1-} in
+  case ${1} in
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_url='${asset}_${KERNEL}_${ARCH}'
@@ -840,7 +840,7 @@ _ghlr_terraform()
 _ghlr_vault()
 {
   local repo=vault owner=hashicorp asset=vault
-  case ${1-} in
+  case ${1} in
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_ext=zip
@@ -866,7 +866,7 @@ _ghlr_vault()
 _ghlr_velero()
 {
   local repo=velero owner=vmware-tanzu asset=velero
-  case ${1-} in
+  case ${1} in
     install)
       local ARCH=${ARCH/armv*/arm}
       local asset_ext=tar.gz
@@ -1082,8 +1082,11 @@ _latest_commit_raw_asset()
 _install_asset()
 {
   local asset_path="${asset_path:-${BIN_PATH}}"
+  if ! _noninteractive; then
+    printf '%-30s\t' "${_clr_orange}${FUNCNAME[-2]#_ghlr_}${_clr_reset}"
+  fi
   if ! diff "${asset_out}" "${asset_path}/${asset}" &>/dev/null; then
-    cp -v "${asset_out}" "${asset_path}/${asset}"
+    local copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
     if [[ "${asset_path}" == "${BIN_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
     elif [[ "${asset_path}" == "${LIBEXEC_PATH}" ]]; then
@@ -1095,9 +1098,16 @@ _install_asset()
     elif [[ "${asset_path}" == "${FCD_PATH}" ]]; then
       chmod a-x "${asset_path}/${asset}"
     fi
-    ${FUNCNAME[2]} completion
   fi
-  _installed add ${FUNCNAME[2]#_ghlr_}
+  printf '%s\n' "${_clr_blue}${copied:-$(_noninteractive || printf "'${asset_out}'")}${_clr_reset}"
+  if [[ -z "${completion-}" ]]; then
+    if [[ -n "${copied-}" ]]; then
+      local completion=true
+      ${FUNCNAME[-2]} completion
+    fi
+  else
+    _installed add ${FUNCNAME[-2]#_ghlr_}
+  fi
 }
 
 _remove_asset()
