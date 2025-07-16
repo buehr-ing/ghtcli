@@ -1083,7 +1083,7 @@ _install_asset()
 {
   local asset_path="${asset_path:-${BIN_PATH}}"
   if ! _noninteractive; then
-    printf '%-30s\t' "${_clr_orange}${FUNCNAME[-2]#_ghlr_}${_clr_reset}"
+    printf '%-30s\t' "${_clr_orange}${FUNCNAME[2]#_ghlr_}${_clr_reset}"
   fi
   if ! diff "${asset_out}" "${asset_path}/${asset}" &>/dev/null; then
     local copied=$(cp -v "${asset_out}" "${asset_path}/${asset}")
@@ -1103,10 +1103,10 @@ _install_asset()
   if [[ -z "${completion-}" ]]; then
     if [[ -n "${copied-}" ]]; then
       local completion=true
-      ${FUNCNAME[-2]} completion
+      ${FUNCNAME[2]} completion
     fi
   else
-    _installed add ${FUNCNAME[-2]#_ghlr_}
+    _installed add ${FUNCNAME[2]#_ghlr_}
   fi
 }
 
