@@ -1404,7 +1404,7 @@ while :; do
       done
       break ;;
     com*) # completion
-      for i in $(_resolve ${@:-_all}); do
+      for i in $(_resolve ${@:-$(_installed list)}); do
         _ghlr_${i} completion
       done
       break ;;
