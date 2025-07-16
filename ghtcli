@@ -1105,7 +1105,8 @@ _install_asset()
   else
     printf '%s\n' "${copied-}"
   fi
-  if [[ -z "${completion-}" ]]; then
+  if [[ -z ${completion-} \
+        && ${cmd::3} != com ]]; then
     if [[ -n "${copied-}" ]]; then
       local completion=called
       ${FUNCNAME[2]} completion
@@ -1235,10 +1236,11 @@ _installed()
                  <(comm -12 <(_installed list |sort) \
                             <(_resolve ${@:-_all}) |sort))"
       if [[ -n ${cannot_removed-} ]]; then
-        printf '%s %s\n%s\n' \
+        printf '%s %s\n%s\n%s\n' \
           "${_clr_red}Ignored${_clr_reset}" \
           "${_clr_blue}$(printf '%s ' ${cannot_removed})${_clr_reset}" \
           "💡 Check the package dependency groups with ${_clr_orange}ghtcli ${_clr_blue}list${_clr_reset}" \
+          "💡 Or you can force the removal of ignored packages with ${_clr_orange}ghtcli ${_clr_blue}remove --force${_clr_reset}" \
           >&2
       fi
       comm -13 <(printf '%s\n' "${new_installed}" |sort) \
@@ -1438,7 +1440,7 @@ while :; do
       fi
       break ;;
     rem*|rm) # remove
-      if [[ "${1:1:2}" == '-f' ]]; then
+      if [[ "${1}" =~ ^-?-f.*$ ]]; then
         shift ||:
         for i in $(_resolve ${@:-$(_installed list)}); do
           _ghlr_${i} remove
