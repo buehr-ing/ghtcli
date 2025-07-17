@@ -914,6 +914,7 @@ _ghlr_yq()
 # Colors
 _clr_red=$'\e[38;2;255;0;0m'
 _clr_blue=$'\e[38;2;0;128;255m'
+_clr_green=$'\e[38;2;0;200;0m'
 _clr_orange=$'\e[38;2;255;106;0m'
 _clr_reset=$'\e[0m'
 
@@ -1100,10 +1101,21 @@ _install_asset()
     fi
   fi
   if ! _noninteractive; then
-    printf '%s\n' \
-    "${_clr_blue}${copied:-"'${asset_out}' -> 'up-to-date'"}${_clr_reset}"
+    if [[ -n "${copied-}" ]]; then
+      printf '%s%s%s\n' \
+        "${_clr_blue}" \
+        "'${asset_out}' => '${asset_path}/${asset}'" \
+        "${_clr_reset}"
+    else
+      printf '%s%s%s\n' \
+        "${_clr_green}" \
+        "'${asset_out}' == '${asset_path}/${asset}'" \
+        "${_clr_reset}"
+    fi
   else
-    printf '%s\n' "${copied-}"
+    if [[ -n "${copied-}" ]]; then
+      printf '%s\n' "${copied}"
+    fi
   fi
   if [[ -z ${completion-} \
         && ${cmd::3} != com ]]; then
