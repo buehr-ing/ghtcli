@@ -1129,7 +1129,7 @@ _install_asset()
 
 _remove_asset()
 {
- rm -vf "${LIBEXEC_PATH}${asset}" \
+ rm -vf "${LIBEXEC_PATH}/${asset}" \
         "${BIN_PATH}/${asset}" \
         "${BCD_PATH}/${asset}" \
         "${ZCD_PATH}/_${asset}" \
