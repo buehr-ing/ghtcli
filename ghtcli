@@ -1356,7 +1356,7 @@ _list()
         printf '%-30s\t' \
           "${_clr_orange}${group}${_clr_reset}"
       else
-        printf '%s\t\t' ''
+        printf '%s\t\t'
       fi
       for item in ${chunk[@]}; do
         printf '%s ' \
