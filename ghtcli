@@ -86,7 +86,7 @@ fi
 _ghlr_digitalocean=doctl
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
-_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,kustomize,helm,stern
+_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,kustomize,helm,helm_ct,stern
 _ghlr_minio=mc,rclone
 _ghlr_ttx=fzf,yq
 _ghlr_kubens=fzf
@@ -307,6 +307,42 @@ _ghlr_helm()
       helm completion fish >"${FCD_PATH}"/helm.fish
       ;;
     remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# helm-chart-testing
+_ghlr_helm_ct()
+{
+  local repo=chart-testing owner=helm asset=ct
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='${repo}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=ct
+      _latest_release_asset
+      mkdir -p "${HOME}"/.ct
+      local asset_path=$_
+      local asset_url=etc/chart_schema.yaml
+      local asset_out='ct-${asset_rel//[^0-9.]}-chart-schema-yaml-${asset_sha}'
+      local asset=chart_schema.yaml
+      _latest_release_raw_asset
+      local asset_url=etc/lintconf.yaml
+      local asset_out='ct-${asset_rel//[^0-9.]}-lintconf-yaml-${asset_sha}'
+      local asset=lintconf.yaml
+      _latest_release_raw_asset
+      ;;
+    completion)
+      ct completion bash >"${BCD_PATH}"/ct
+      ct completion zsh >"${ZCD_PATH}"/_ct
+      ct completion fsh >"${FCD_PATH}"/ct.fish
+      ;;
+    remove)
+      _remove_asset
+      rm -vrf "${HOME}"/.ct
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
@@ -1013,9 +1049,13 @@ _latest_release_raw_asset()
     )
   fi
   if [[ -z "${asset_sha-}" ]]; then
-    local asset_sha=$( \
+    local asset_ref=$( \
       curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${asset_rel}" \
-        |jq -r '.object.sha[:7]'
+        |jq -r '.object.sha'
+    )
+    local asset_sha=$( \
+      curl -fsSL "https://api.github.com/repos/${owner}/${repo}/git/tags/${asset_ref}" 2>/dev/null \
+        |jq -r '.object.sha[:7]' || printf "${asset_ref::7}"
     )
   fi
 
@@ -1098,11 +1138,7 @@ _install_asset()
       chmod a+x "${asset_path}/${asset}"
     elif [[ "${asset_path}" == "${LIBEXEC_PATH}" ]]; then
       chmod a+x "${asset_path}/${asset}"
-    elif [[ "${asset_path}" == "${BCD_PATH}" ]]; then
-      chmod a-x "${asset_path}/${asset}"
-    elif [[ "${asset_path}" == "${ZCD_PATH}" ]]; then
-      chmod a-x "${asset_path}/${asset}"
-    elif [[ "${asset_path}" == "${FCD_PATH}" ]]; then
+    else
       chmod a-x "${asset_path}/${asset}"
     fi
   fi
