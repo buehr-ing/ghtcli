@@ -1321,9 +1321,9 @@ _autoupdate()
     ena*) # create cronjob
       _autoupdate marker
       if [[ ${KERNEL} == darwin ]]; then
-        local job="0 */6 * * 1-5 $(which bash 2>/dev/null) ${script} update"
+        local job="0 */6 * * 1-5 ${GITHUB_TOKEN:+GITHUB_TOKEN=${GITHUB_TOKEN@Q}} $(which bash 2>/dev/null) ${script} update"
       else
-        local job="0 */6 * * 1-5 ${script} update"
+        local job="0 */6 * * 1-5 ${GITHUB_TOKEN:+GITHUB_TOKEN=${GITHUB_TOKEN@Q}} ${script} update"
       fi
       if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
         (crontab -l 2>/dev/null |grep -vF ${script} ||:; printf '%s\n' "${job}") |crontab -
