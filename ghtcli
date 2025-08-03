@@ -18,17 +18,12 @@ shopt -s expand_aliases
 SCRIPT_DIRNAME="$(cd "$(dirname "${0}")" && pwd)"
 SCRIPT_ARGS=("${@}")
 
-## sudo
-#if [[ $(id -u) -ne 0 ]]; then
-#  exec sudo GITHUB_TOKEN="${GITHUB_TOKEN-}" "${SCRIPT_DIRNAME}"/ghtcli "${SCRIPT_ARGS[@]}"
-#fi
-
 # github token (recommended)
 # https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#primary-rate-limit-for-unauthenticated-users
 # => unauthenticated : 60 requests per hour
 # => authenticated   : 5,000 requests per hour
-if [[ -n ${GITHUB_TOKEN-} ]]; then
-  alias curl="curl -H 'Authorization: Bearer ${GITHUB_TOKEN}'"
+if [[ -n ${GHTCLI_GITHUB_TOKEN:=${GITHUB_TOKEN-}} ]]; then
+  alias curl="curl -H 'Authorization: Bearer ${GHTCLI_GITHUB_TOKEN}'"
 fi
 
 # Target folders
@@ -1321,12 +1316,20 @@ _autoupdate()
     ena*) # create cronjob
       _autoupdate marker
       if [[ ${KERNEL} == darwin ]]; then
-        local job="0 */6 * * 1-5 ${GITHUB_TOKEN:+GITHUB_TOKEN=${GITHUB_TOKEN@Q}} $(which bash 2>/dev/null) ${script} update"
+        local job="0 */6 * * 1-5 $(which bash 2>/dev/null) ${script} update"
       else
-        local job="0 */6 * * 1-5 ${GITHUB_TOKEN:+GITHUB_TOKEN=${GITHUB_TOKEN@Q}} ${script} update"
+        local job="0 */6 * * 1-5 ${script} update"
+      fi
+      if [[ -n "${GHTCLI_GITHUB_TOKEN}" ]]; then
+        if ! (crontab -l 2>/dev/null |grep -qF GHTCLI_GITHUB_TOKEN=); then
+          (crontab -l 2>/dev/null |grep -vF ${script} ||:) |crontab -
+          (crontab -l 2>/dev/null |grep -vF GHTCLI_GITHUB_TOKEN= ||:; \
+            printf '%s\n' "GHTCLI_GITHUB_TOKEN=${GHTCLI_GITHUB_TOKEN@Q}") |crontab -
+        fi
       fi
       if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
-        (crontab -l 2>/dev/null |grep -vF ${script} ||:; printf '%s\n' "${job}") |crontab -
+        (crontab -l 2>/dev/null |grep -vF ${script} ||:; \
+          printf '%s\n' "${job}") |crontab -
         printf '%s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
           'cronjob added:'
@@ -1335,13 +1338,17 @@ _autoupdate()
           "${_clr_orange}Autoupdate${_clr_reset}" \
           'cronjob(s) already present:'
       fi
-      crontab -l 2>/dev/null |grep -F ${script} \
+      (crontab -l 2>/dev/null |grep -F GHTCLI_GITHUB_TOKEN= ||:) \
+        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+      (crontab -l 2>/dev/null |grep -F ${script} ||:) \
         |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
       printf '%s\n' "💡 Edit the timing manually with: ${_clr_blue}crontab -eu ${_clr_orange}${USER}${_clr_reset}"
       ;;
     dis*) # remove cronjobs
+      local token="$(crontab -l 2>/dev/null |grep -F GHTCLI_GITHUB_TOKEN= ||:)"
       local job="$(crontab -l 2>/dev/null |grep -F ${script} ||:)"
-      if [[ -n "${job}" ]]; then
+      if [[ -n "${job}" || -n "${token}" ]]; then
+        (crontab -l 2>/dev/null |grep -vF GHTCLI_GITHUB_TOKEN= ||:) |crontab -
         (crontab -l 2>/dev/null |grep -vF ${script} ||:) |crontab -
         printf '%s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
@@ -1351,7 +1358,9 @@ _autoupdate()
           "${_clr_orange}Autoupdate${_clr_reset}" \
           'no cronjob(s) found:'
       fi
-      printf '%s\n' "${job:-n/a}" \
+      printf '%s' "${token}" \
+        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+      printf '%s' "${job:-n/a}" \
         |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
       if _autoupdate marker &>/dev/null; then
         rm -f "${CFG_PATH}"/autoupdate
