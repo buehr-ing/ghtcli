@@ -110,7 +110,7 @@ _ghlr_ghtcli()
           if ! _noninteractive; then
             printf '%s %s\n' \
               "${_clr_orange}ghtcli${_clr_reset}" \
-              "${_clr_blue}Reloading with updated version..${_clr_reset}"
+              "${_clr_blue}reloading with updated version..${_clr_reset}"
           fi
           sleep 1s
           if [[ ${KERNEL} == darwin ]]; then
