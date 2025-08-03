@@ -1330,18 +1330,20 @@ _autoupdate()
       if ! (crontab -l 2>/dev/null |grep -qF ${script}); then
         (crontab -l 2>/dev/null |grep -vF ${script} ||:; \
           printf '%s\n' "${job}") |crontab -
-        printf '%s %s\n' \
+        printf '%s %s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
+          "${_clr_blue}${USER}${_clr_reset}" \
           'cronjob added:'
       else
-        printf '%s %s\n' \
+        printf '%s %s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
+          "${_clr_blue}${USER}${_clr_reset}" \
           'cronjob(s) already present:'
       fi
       (crontab -l 2>/dev/null |grep -F GHTCLI_GITHUB_TOKEN= ||:) \
-        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+        |xargs -rI%% printf ' %s\n' "${_clr_blue}%%${_clr_reset}"
       (crontab -l 2>/dev/null |grep -F ${script} ||:) \
-        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+        |xargs -rI%% printf ' %s\n' "${_clr_blue}%%${_clr_reset}"
       printf '%s\n' "💡 Edit the timing manually with: ${_clr_blue}crontab -eu ${_clr_orange}${USER}${_clr_reset}"
       ;;
     dis*) # remove cronjobs
@@ -1350,18 +1352,20 @@ _autoupdate()
       if [[ -n "${job}" || -n "${token}" ]]; then
         (crontab -l 2>/dev/null |grep -vF GHTCLI_GITHUB_TOKEN= ||:) |crontab -
         (crontab -l 2>/dev/null |grep -vF ${script} ||:) |crontab -
-        printf '%s %s\n' \
+        printf '%s %s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
+          "${_clr_blue}${USER}${_clr_reset}" \
           'cronjob(s) removed:'
       else
-        printf '%s %s\n' \
+        printf '%s %s %s\n' \
           "${_clr_orange}Autoupdate${_clr_reset}" \
-          'no cronjob(s) found:'
+          "${_clr_blue}${USER}${_clr_reset}" \
+          'no cronjob(s) found.'
       fi
       printf '%s' "${token}" \
-        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
-      printf '%s' "${job:-n/a}" \
-        |xargs -rI%% printf ' %s\n' "${_clr_orange}${USER} ${_clr_blue}%%${_clr_reset}"
+        |xargs -rI%% printf ' %s\n' "${_clr_blue}%%${_clr_reset}"
+      printf '%s' "${job}" \
+        |xargs -rI%% printf ' %s\n' "${_clr_blue}%%${_clr_reset}"
       if _autoupdate marker &>/dev/null; then
         rm -f "${CFG_PATH}"/autoupdate
       fi
@@ -1372,7 +1376,7 @@ _autoupdate()
         if [[ $(hostname -f) != ${hostname-} ]]; then
           printf '%s %s %s\n' \
             "${_clr_red}Autoupdate${_clr_reset}" \
-            "${_clr_blue}is already enabled on host" \
+            "${_clr_blue}is already enabled on host${_clr_reset}" \
             "${_clr_orange}${hostname:-🚫 ${_clr_red}marker is empty}${_clr_reset}"
             >&2
           return 1
