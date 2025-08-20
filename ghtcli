@@ -1488,6 +1488,7 @@ while :; do
       break ;;
     pos*|com*) # postinstall (formerly completion)
       for i in ${@:-$(_installed list)}; do
+        local postinstall=called
         _ghlr_${i} postinstall
       done
       break ;;
