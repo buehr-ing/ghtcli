@@ -1154,8 +1154,7 @@ _install_asset()
       printf '%s\n' "${copied}"
     fi
   fi
-  if [[ -z ${postinstall-} \
-        && ${cmd::3} != com ]]; then
+  if [[ -z ${postinstall-} ]]; then
     if [[ -n "${copied-}" ]]; then
       local postinstall=called
       ${FUNCNAME[2]} postinstall
@@ -1487,9 +1486,14 @@ while :; do
       done
       break ;;
     pos*|com*) # postinstall (formerly completion)
-      postinstall=called
       for i in ${@:-$(_installed list)}; do
-        _ghlr_${i} postinstall
+        if grep -qxF ${i} .installed; then
+          postinstall=called
+          _ghlr_${i} postinstall
+        else
+          unset -v postinstall
+          _ghlr_${i} install
+        fi
       done
       break ;;
     upd*) # update
