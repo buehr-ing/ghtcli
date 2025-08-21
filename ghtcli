@@ -318,6 +318,8 @@ _ghlr_helm_ct()
       local asset_url='${repo}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
       local asset_tar=ct
       _latest_release_asset
+      ;;
+    postinstall)
       mkdir -p "${HOME}"/.ct
       local asset_path=$_
       local asset_url=etc/chart_schema.yaml
@@ -328,8 +330,6 @@ _ghlr_helm_ct()
       local asset_out='ct-${asset_rel//[^0-9.]}-lintconf-yaml-${asset_sha}'
       local asset=lintconf.yaml
       _latest_release_raw_asset
-      ;;
-    postinstall)
       ct completion bash >"${BCD_PATH}"/ct
       ct completion zsh >"${ZCD_PATH}"/_ct
       ct completion fsh >"${FCD_PATH}"/ct.fish
