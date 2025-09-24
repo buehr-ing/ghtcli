@@ -84,6 +84,7 @@ _ghlr_digitalocean=doctl
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,kustomize,helm,helm_ct,stern
+_ghlr_gitlab=glab
 _ghlr_minio=mc,rclone
 _ghlr_ttx=fzf,yq
 _ghlr_kubens=fzf
