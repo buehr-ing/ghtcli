@@ -97,7 +97,7 @@ _ghlr_kubectx=fzf
 # ghtcli
 _ghlr_ghtcli()
 {
-  local repo=ghtcli owner=buehr-ing asset=ghtcli
+  local repo=ghtcli owner=marcel.buehr-ing asset=ghtcli
   case ${1} in
     install)
       local asset_url=ghtcli
