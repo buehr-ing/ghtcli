@@ -81,15 +81,16 @@ fi
 #
 
 # groups
+_ghlr_aquasecurity=trivy
 _ghlr_digitalocean=doctl
 _ghlr_docker=ctop,lazydocker,dry
 _ghlr_gitlab=glab
 _ghlr_hashicorp=vault,terraform
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct
 _ghlr_minio=mc,rclone
-_ghlr_regutils=oras,regclient,skopeo
-_ghlr_imgsec=trivy
-_ghlr_imgutils=dockle,dive,hadolint
+_ghlr_registry=oras,regclient,skopeo
+_ghlr_security=trivy
+_ghlr_image=dockle,dive,hadolint
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 
 # dependencies
