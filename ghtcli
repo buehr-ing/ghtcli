@@ -661,6 +661,39 @@ _ghlr_mc()
   esac
 }
 
+# nerdctl
+_ghlr_nerdctl()
+{
+  local repo=nerdctl owner=containerd asset=nerdctl
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='nerdctl-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_out='nerdctl-${asset_rel}-${KERNEL}-${ARCH}'
+      local asset_tar=nerdctl
+      _latest_release_asset
+      local asset=containerd-rootless.sh
+      local asset_tar=containerd-rootless.sh
+      _latest_release_asset
+      local asset=containerd-rootless-setuptool.sh
+      local asset_tar=containerd-rootless-setuptool.sh
+      _latest_release_asset
+      ;;
+    postinstall)
+      nerdctl completion bash >"${BCD_PATH}"/nerdctl
+      nerdctl completion zsh >"${ZCD_PATH}"/_nerdctl
+      nerdctl completion fsh >"${FCD_PATH}"/nerdctl.fish
+      ;;
+    remove)
+      _remove_asset
+      rm -vf "${BIN_PATH}"/containerd-rootless{,-setuptool}.sh
+      ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
 # openbao
 _ghlr_openbao()
 {
