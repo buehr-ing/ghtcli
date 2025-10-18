@@ -81,9 +81,10 @@ fi
 #
 
 _ghlr_digitalocean=doctl
+_ghlr_docker=ctop,lazydocker,oras,skopeo,dive
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
-_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,kustomize,helm,helm_ct,oras,stern
+_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
 _ghlr_gitlab=glab
 _ghlr_minio=mc,rclone
 _ghlr_ttx=fzf,yq
@@ -206,6 +207,29 @@ _ghlr_curl()
       hash -d curl
       ;;
     postinstall) true ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# dive
+_ghlr_dive()
+{
+  local repo=dive owner=wagoodman asset=dive
+  case ${1} in
+    install)
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}_${ARCH}.${asset_ext}'
+      local asset_tar=dive
+      _latest_release_asset
+      ;;
+    postinstall)
+      dive completion bash >"${BCD_PATH}"/dive
+      dive completion zsh >"${ZCD_PATH}"/_dive
+      dive completion fish >"${FCD_PATH}"/dive.fish
+      ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
@@ -586,6 +610,26 @@ _ghlr_kustomize()
       kustomize completion zsh >"${ZCD_PATH}"/_kustomize
       kustomize completion fish >"${FCD_PATH}"/kustomize.fish
       ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# lazydocker
+_ghlr_lazydocker()
+{
+  local repo=lazydocker owner=jesseduffield asset=lazydocker
+  case ${1} in
+    install)
+      local ARCH=${ARCH/amd64/x86_64}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL^}_${ARCH}.${asset_ext}'
+      local asset_tar=lazydocker
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
