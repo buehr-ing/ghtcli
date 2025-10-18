@@ -80,13 +80,17 @@ fi
 # Application groups and dependencies
 #
 
+# groups
 _ghlr_digitalocean=doctl
 _ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive,dockle,hadolint
-_ghlr_hashicorp=vault,terraform
-_ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
-_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
 _ghlr_gitlab=glab
+_ghlr_hashicorp=vault,terraform
+_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
 _ghlr_minio=mc,rclone
+_ghlr_regclient=regbot,regctl,regsync
+_ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
+
+# dependencies
 _ghlr_ttx=fzf,yq
 _ghlr_kubens=fzf
 _ghlr_kubectx=fzf
@@ -875,6 +879,69 @@ _ghlr_rclone()
       rclone completion bash "${BCD_PATH}"/rclone
       rclone completion zsh "${ZCD_PATH}"/_rclone
       rclone completion fish "${FCD_PATH}"/rclone.fish
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# regbot
+_ghlr_regbot()
+{
+  local repo=regclient owner=regclient asset=regbot
+  case ${1} in
+    install)
+      local asset_url='${asset}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    postinstall)
+      regbot completion bash >"${BCD_PATH}"/regbot
+      regbot completion zsh >"${ZCD_PATH}"/_regbot
+      regbot completion fish >"${FCD_PATH}"/regbot.fish
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# regctl
+_ghlr_regctl()
+{
+  local repo=regclient owner=regclient asset=regctl
+  case ${1} in
+    install)
+      local asset_url='${asset}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    postinstall)
+      regctl completion bash >"${BCD_PATH}"/regctl
+      regctl completion zsh >"${ZCD_PATH}"/_regctl
+      regctl completion fish >"${FCD_PATH}"/regctl.fish
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# regsync
+_ghlr_regsync()
+{
+  local repo=regclient owner=regclient asset=regsync
+  case ${1} in
+    install)
+      local asset_url='${asset}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    postinstall)
+      regsync completion bash >"${BCD_PATH}"/regsync
+      regsync completion zsh >"${ZCD_PATH}"/_regsync
+      regsync completion fish >"${FCD_PATH}"/regsync.fish
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
