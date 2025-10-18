@@ -81,7 +81,7 @@ fi
 #
 
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive
+_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive,dockle
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
@@ -230,6 +230,30 @@ _ghlr_dive()
       dive completion zsh >"${ZCD_PATH}"/_dive
       dive completion fish >"${FCD_PATH}"/dive.fish
       ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# dockle
+_ghlr_dockle()
+{
+  local repo=dockle owner=goodwithtech asset=dockle
+  case ${1} in
+    install)
+      local KERNEL=${KERNEL/linux/Linux}
+      local KERNEL=${KERNEL/darwin/macOS}
+      local ARCH=${ARCH/amd64/64bit}
+      local ARCH=${ARCH/arm64/ARM64}
+      local ARCH=${ARCH/armv*/ARM}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_tar=dockle
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
