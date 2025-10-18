@@ -83,7 +83,7 @@ fi
 # groups
 _ghlr_aquasecurity=trivy
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,dry
+_ghlr_docker=ctop,lazydocker,dry,docuum
 _ghlr_gitlab=glab
 _ghlr_hashicorp=vault,terraform
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct
@@ -288,6 +288,27 @@ _ghlr_doctl()
         doctl completion fish >"${FCD_PATH}"/doctl.fish
       fi
       ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# docuum
+_ghlr_docuum()
+{
+  local repo=docuum owner=stepchowfun asset=docuum
+  case ${1} in
+    install)
+      local KERNEL=${KERNEL/linux/unknown-linux-musl}
+      local KERNEL=${KERNEL/darwin/apple-darwin}
+      local ARCH=${ARCH/amd64/x86_64}
+      local ARCH=${ARCH/arm64/aarch64}
+      local asset_url='${asset}-${ARCH}-${KERNEL}'
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
