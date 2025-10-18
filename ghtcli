@@ -81,7 +81,7 @@ fi
 #
 
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,oras,skopeo,dive
+_ghlr_docker=ctop,lazydocker,oras,skopeo,dive,nerdctl
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
