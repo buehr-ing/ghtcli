@@ -82,18 +82,21 @@ fi
 
 # groups
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive,dockle,hadolint
+_ghlr_docker=ctop,lazydocker,dry
 _ghlr_gitlab=glab
 _ghlr_hashicorp=vault,terraform
-_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
+_ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct
 _ghlr_minio=mc,rclone
-_ghlr_regclient=regbot,regctl,regsync
+_ghlr_regutils=oras,regclient,skopeo
+_ghlr_imgsec=trivy
+_ghlr_imgutils=dockle,dive,hadolint
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 
 # dependencies
-_ghlr_ttx=fzf,yq
-_ghlr_kubens=fzf
 _ghlr_kubectx=fzf
+_ghlr_kubens=fzf
+_ghlr_regclient=regbot,regctl,regsync
+_ghlr_ttx=fzf,yq
 
 #
 # Installable Applications
@@ -1075,6 +1078,35 @@ _ghlr_talosctl()
       talosctl completion bash >"${BCD_PATH}"/talosctl
       talosctl completion zsh >"${ZCD_PATH}"/_talosctl
       talosctl completion fish >"${FCD_PATH}"/talosctl.fish
+      ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# trivy
+_ghlr_trivy()
+{
+  local repo=trivy owner=aquasecurity asset=trivy
+  case ${1} in
+    install)
+      local KERNEL=${KERNEL/linux/Linux}
+      local KERNEL=${KERNEL/darwin/macOS}
+      local ARCH=${ARCH/386/32bit}
+      local ARCH=${ARCH/amd64/64bit}
+      local ARCH=${ARCH/arm64/ARM64}
+      local ARCH=${ARCH/armv*/ARM}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL}-${ARCH}.${asset_ext}'
+      local asset_tar=trivy
+      _latest_release_asset
+      ;;
+    postinstall)
+      trivy completion bash >"${BCD_PATH}"/trivy
+      trivy completion zsh >"${ZCD_PATH}"/_trivy
+      trivy completion fish >"${FCD_PATH}"/trivy.fish
       ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
