@@ -81,7 +81,7 @@ fi
 #
 
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,oras,skopeo,dive
+_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
@@ -256,6 +256,23 @@ _ghlr_doctl()
         doctl completion fish >"${FCD_PATH}"/doctl.fish
       fi
       ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# dry
+_ghlr_dry()
+{
+  local repo=dry owner=moncho asset=dry
+  case ${1} in
+    install)
+      local asset_url='${asset}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
