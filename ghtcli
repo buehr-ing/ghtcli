@@ -81,7 +81,7 @@ fi
 #
 
 _ghlr_digitalocean=doctl
-_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive,dockle
+_ghlr_docker=ctop,lazydocker,dry,oras,skopeo,dive,dockle,hadolint
 _ghlr_hashicorp=vault,terraform
 _ghlr_talos=talosctl,ttx,talos_ps1,talhelper,talm,flux
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct,oras,skopeo,dive
@@ -368,6 +368,25 @@ _ghlr_glab()
       glab completion -s zsh >"${ZCD_PATH}"/_glab
       glab completion -s fish >"${FCD_PATH}"/glab.fish
       ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# hadolint
+_ghlr_hadolint()
+{
+  local repo=hadolint owner=hadolint asset=hadolint
+  case ${1} in
+    install)
+      local KERNEL=${KERNEL/darwin/macos}
+      local ARCH=${ARCH/amd64/x86_64}
+      local asset_url='${asset}-${KERNEL}-${ARCH}'
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
     remove) _remove_asset ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
