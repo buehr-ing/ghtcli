@@ -465,10 +465,12 @@ _ghlr_helm_ct()
       local asset_path=$_
       local asset_url=etc/chart_schema.yaml
       local asset_out='ct-${asset//[.]/_}-${asset_rel//[^0-9.]}-${asset_sha}'
+      local asset_pcf='ct-${asset//[.]/_}-*'
       local asset=chart_schema.yaml
       _latest_release_raw_asset
       local asset_url=etc/lintconf.yaml
       local asset_out='ct-${asset//[.]/_}-${asset_rel//[^0-9.]}-${asset_sha}'
+      local asset_pcf='ct-${asset//[.]/_}-'
       local asset=lintconf.yaml
       _latest_release_raw_asset
       ct completion bash >"${BCD_PATH}"/ct
@@ -497,9 +499,10 @@ _ghlr_jq()
       ;;
     postinstall)
       # jq completion bash >"${BCD_PATH}"/jq
-      local repo=bash-completion owner=scop asset=jq-scop
+      local repo=bash-completion owner=scop asset=jq
       local asset_url=completions/jq
       local asset_out='${asset}-${repo}-${asset_sha}'
+      local asset_pcf='${asset}-${repo}-*'
       local asset_path="${BCD_PATH}"
       _latest_commit_raw_asset
       ;;
@@ -613,33 +616,33 @@ _ghlr_kubectx()
       _latest_release_asset
       ;;
     postinstall)
-      # ktx completion bash >"${BCD_PATH}"/ktx-kubectx
+      # ktx completion bash >"${BCD_PATH}"/ktx
       local asset_url=completion/kubectx.bash
       local asset_out='ktx-bash-completion-${asset_rel}-${asset_sha}'
       local asset_pcf='ktx-bash-completion-*'
       local asset_path="${BCD_PATH}"
-      local asset=ktx-kubectx
+      local asset=ktx
       _latest_release_raw_asset
       sed 's/^\(complete -F _kube_contexts kubectx kctx\)$/\1 ktx/' \
-        ktx-bash-completion-*-!(*.etag) "${BCD_PATH}"/ktx-kubectx
-      # ktx completion zsh >"${ZCD_PATH}"/_ktx-kubectx
+        ktx-bash-completion-*-!(*.etag) "${BCD_PATH}"/ktx
+      # ktx completion zsh >"${ZCD_PATH}"/_ktx
       local asset_url=completion/_kubectx.zsh
       local asset_out='ktx-zsh-completion-${asset_rel}-${asset_sha}'
       local asset_pcf='ktx-zsh-completion-*'
       local asset_path="${ZCD_PATH}"
-      local asset=_ktx-kubectx
+      local asset=_ktx
       _latest_release_raw_asset
       sed 's/^\(#compdef kubectx kctx=kubectx\)$/\1 ktx=kubectx/' \
-        ktx-zsh-completion-*-!(*.etag) "${ZCD_PATH}"/_ktx-kubectx
-      # ktx completion fish >"${FCD_PATH}"/ktx-kubectx.fish
+        ktx-zsh-completion-*-!(*.etag) "${ZCD_PATH}"/_ktx
+      # ktx completion fish >"${FCD_PATH}"/ktx.fish
       local asset_url=completion/kubectx.fish
       local asset_out='ktx-fish-completion-${asset_rel}-${asset_sha}'
       local asset_pcf='ktx-fish-completion-*'
       local asset_path="${FCD_PATH}"
-      local asset=ktx-kubectx.fish
+      local asset=ktx.fish
       _latest_release_raw_asset
       sed 's/kubectx/ktx/g' \
-        ktx-fish-completion-*-!(*.etag) "${FCD_PATH}"/ktx-kubectx.fish
+        ktx-fish-completion-*-!(*.etag) "${FCD_PATH}"/ktx.fish
       ;;
     remove)
       _remove_asset
@@ -666,26 +669,29 @@ _ghlr_kubens()
       _latest_release_asset
       ;;
     postinstall)
-      # kns completion bash >"${BCD_PATH}"/kns-kubens
+      # kns completion bash >"${BCD_PATH}"/kns
       local asset_url=completion/kubens.bash
       local asset_out='kns-bash-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='kns-bash-completion-*'
       local asset_path="${BCD_PATH}"
-      local asset=kns-kubens
+      local asset=kns
       _latest_release_raw_asset
-      # kns completion zsh >"${ZCD_PATH}"/_kns-kubens
+      # kns completion zsh >"${ZCD_PATH}"/_kns
       local asset_url=completion/_kubens.zsh
       local asset_out='kns-zsh-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='kns-zsh-completion-*'
       local asset_path="${ZCD_PATH}"
-      local asset=_kns-kubens
+      local asset=_kns
       _latest_release_raw_asset
-      # kns completion fish >"${FCD_PATH}"/kns-kubens.fish
+      # kns completion fish >"${FCD_PATH}"/kns.fish
       local asset_url=completion/kubens.fish
       local asset_out='kns-fish-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='kns-fish-completion-*'
       local asset_path="${FCD_PATH}"
-      local asset=kns-kubens.fish
+      local asset=kns.fish
       _latest_release_raw_asset
       sed 's/kubens/kns/g' \
-        kns-fish-completion-*-!(*.etag) "${FCD_PATH}"/kns-kubens.fish
+        kns-fish-completion-*-!(*.etag) "${FCD_PATH}"/kns.fish
       ;;
     remove)
       _remove_asset
@@ -1358,10 +1364,12 @@ _latest_release_asset()
   local asset_url="${asset_url-}"
   local asset_out="${asset_out-}"
   local asset_dwl="${asset_dwl-}"
+  local asset_pcf="${asset_pcf-}"
   eval "asset_ext=\"${asset_ext}\""
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}${asset_ext:+.${asset_ext#.}}}\""
   eval "asset_out=\"${asset_out:-${asset}-${asset_rel}-${KERNEL}-${ARCH}}\""
   eval "asset_dwl=\"${asset_dwl:-https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}}\""
+  eval "asset_pcf=\"${asset_pcf:-${asset_pcf:-${asset}-*}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
     curl -H "${AUTH_HEADER}" \
          -fsSLR "${asset_dwl}" \
@@ -1439,9 +1447,11 @@ _latest_release_raw_asset()
   local asset_url="${asset_url-}"
   local asset_out="${asset_out-}"
   local asset_dwl="${asset_dwl-}"
+  local asset_pcf="${asset_pcf-}"
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
   eval "asset_out=\"${asset_out:-${asset}-${asset_rel}-${KERNEL}-${ARCH}-${asset_sha}}\""
   eval "asset_dwl=\"${asset_dwl:-https://raw.githubusercontent.com/${owner}/${repo}/${asset_sha}/${asset_url}}\""
+  eval "asset_pcf=\"${asset_pcf:-${asset_pcf:-${asset}-*}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
     curl -H "${AUTH_HEADER}" \
          -fsSLR "${asset_dwl}" \
@@ -1493,9 +1503,11 @@ _latest_commit_raw_asset()
   local asset_url="${asset_url-}"
   local asset_out="${asset_out-}"
   local asset_dwl="${asset_dwl-}"
+  local asset_pcf="${asset_pcf-}"
   eval "asset_url=\"${asset_url:-${asset}-${KERNEL}-${ARCH}}\""
   eval "asset_out=\"${asset_out:-${asset}-${asset_sha}-${KERNEL}-${ARCH}}\""
   eval "asset_dwl=\"${asset_dwl:-https://raw.githubusercontent.com/${owner}/${repo}/${asset_sha}/${asset_url}}\""
+  eval "asset_pcf=\"${asset_pcf:-${asset_pcf:-${asset}-*}}\""
   if curl --help http |grep -- '--etag-' &>/dev/null; then
     curl -H "${AUTH_HEADER}" \
          -fsSLR "${asset_dwl}" \
@@ -1532,7 +1544,7 @@ _install_asset()
     fi
     # prune cache
     find -maxdepth 1 -type f \
-         -name "${asset_pcf:-${asset_out%%-*}-*}" \
+         -name "${asset_pcf}" \
        ! -name "${asset_out}*" \
          -delete
   fi
