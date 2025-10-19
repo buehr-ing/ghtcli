@@ -886,7 +886,7 @@ _ghlr_openbao_hsm()
           "${_clr_red}Ignored${_clr_reset}" \
           "${_clr_blue}openbao_hsm${_clr_reset}" \
           "Is not compatible with ${_clr_orange}macOS${_clr_reset}" \
-          "💡 Install OpenBao without HSM support. Use ${_clr_orange}ghtcli ${_clr_blue}install openbao_hsm${_clr_reset}" \
+          "💡 Install OpenBao without HSM support. Use ${_clr_orange}ghtcli ${_clr_blue}install${_clr_reset} openbao_hsm" \
           >&2
         return
       fi
