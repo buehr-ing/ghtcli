@@ -814,6 +814,14 @@ _ghlr_nerdctl()
   local repo=nerdctl owner=containerd asset=nerdctl
   case ${1} in
     install)
+      if [[ ${KERNEL} == darwin ]]; then
+        printf '%s %s %s\n' \
+          "${_clr_red}Ignored${_clr_reset}" \
+          "${_clr_blue}nerdctl${_clr_reset}" \
+          "Is not compatible with: ${_clr_orange}macOS${_clr_reset}" \
+          >&2
+        return
+      fi
       local asset_ext=tar.gz
       local asset_url='nerdctl-${asset_rel//[^0-9.]}-${KERNEL}-${ARCH}.${asset_ext}'
       local asset_out='nerdctl-${asset_rel}-${KERNEL}-${ARCH}'
