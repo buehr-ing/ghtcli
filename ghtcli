@@ -1325,6 +1325,7 @@ _latest_release_asset()
   # asset_out    : asset name used as output      # default : ${asset}-${asset_rel}-${KERNEL}-${ARCH}
   # asset_rel    : asset release name             # default : $(curl -H "${AUTH_HEADER}" -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" |jq -r '.tag_name')
   # asset_dwl    : asset download url             # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
+  # asset_pcf    : asset prune cache filter       # default : ${asset_out%%-*}-*
   # asset_dah    : asset download auth header     # default : ''
 
   # latest
@@ -1402,6 +1403,7 @@ _latest_release_raw_asset()
   # asset_rel    : asset release name         # default : $(curl -H "${AUTH_HEADER}" -fsSL "https://api.github.com/repos/${owner}/${repo}/releases/latest" |jq -r '.tag_name')
   # asset_sha    : asset commit hash          # default : $(curl -H "${AUTH_HEADER}" -fsSL "https://api.github.com/repos/${owner}/${repo}/git/ref/tags/${asset_rel}" |jq -r '.object.sha[:7]')
   # asset_dwl    : asset download url         # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
+  # asset_pcf    : asset prune cache filter   # default : ${asset_out%%-*}-*
   # asset_dah    : asset download auth header # default : ''
 
   # latest
@@ -1466,6 +1468,7 @@ _latest_commit_raw_asset()
   # asset_out    : asset name used as output  # default : ${asset}-(${asset_sha}-${KERNEL}-${ARCH}
   # asset_sha    : asset commit hash          # default : $(curl -H "${AUTH_HEADER}" -fsSL "https://api.github.com/repos/${owner}/${repo}/commits/heads/${asset_branch:-main}" |jq -r '.sha[:7]')
   # asset_dwl    : asset download url         # default : https://github.com/${owner}/${repo}/releases/download/${asset_rel}/${asset_url}
+  # asset_pcf    : asset prune cache filter   # default : ${asset_out%%-*}-*
   # asset_dah    : asset download auth header # default : ''
 
 
@@ -1547,7 +1550,7 @@ _install_asset()
 
   # prune cache
   find -maxdepth 1 -type f \
-       -name "${asset_out%%-*}-*" \
+       -name "${asset_pcf:-${asset_out%%-*}-*}" \
        ! -name "${asset_out}*" \
        -delete
 
@@ -1559,6 +1562,7 @@ _install_asset()
       unset asset_rel
       unset asset_sha
       unset asset_dwl
+      unset asset_pcf
       local postinstall=called
       ${FUNCNAME[2]} postinstall
     fi
