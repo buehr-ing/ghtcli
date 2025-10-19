@@ -1543,10 +1543,10 @@ _install_asset()
       chmod a-x "${asset_path}/${asset}"
     fi
     # prune cache
-    find -maxdepth 1 -type f \
-         -name "${asset_pcf}" \
-       ! -name "${asset_out}*" \
-         -delete
+    find . -type f \
+           -name "${asset_pcf}" \
+         ! -name "${asset_out}*" \
+           -delete
   fi
 
   # output
