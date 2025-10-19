@@ -616,6 +616,7 @@ _ghlr_kubectx()
       # ktx completion bash >"${BCD_PATH}"/ktx-kubectx
       local asset_url=completion/kubectx.bash
       local asset_out='ktx-bash-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='ktx-bash-completion-*'
       local asset_path="${BCD_PATH}"
       local asset=ktx-kubectx
       _latest_release_raw_asset
@@ -624,6 +625,7 @@ _ghlr_kubectx()
       # ktx completion zsh >"${ZCD_PATH}"/_ktx-kubectx
       local asset_url=completion/_kubectx.zsh
       local asset_out='ktx-zsh-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='ktx-zsh-completion-*'
       local asset_path="${ZCD_PATH}"
       local asset=_ktx-kubectx
       _latest_release_raw_asset
@@ -632,6 +634,7 @@ _ghlr_kubectx()
       # ktx completion fish >"${FCD_PATH}"/ktx-kubectx.fish
       local asset_url=completion/kubectx.fish
       local asset_out='ktx-fish-completion-${asset_rel}-${asset_sha}'
+      local asset_pcf='ktx-fish-completion-*'
       local asset_path="${FCD_PATH}"
       local asset=ktx-kubectx.fish
       _latest_release_raw_asset
@@ -1527,6 +1530,11 @@ _install_asset()
     else
       chmod a-x "${asset_path}/${asset}"
     fi
+    # prune cache
+    find -maxdepth 1 -type f \
+         -name "${asset_pcf:-${asset_out%%-*}-*}" \
+       ! -name "${asset_out}*" \
+         -delete
   fi
 
   # output
@@ -1547,12 +1555,6 @@ _install_asset()
       printf '%s\n' "${copied}"
     fi
   fi
-
-  # prune cache
-  find -maxdepth 1 -type f \
-       -name "${asset_pcf:-${asset_out%%-*}-*}" \
-       ! -name "${asset_out}*" \
-       -delete
 
   # postinstall
   if [[ -z ${postinstall-} ]]; then
