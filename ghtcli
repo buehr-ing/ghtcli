@@ -12,6 +12,7 @@ fi
 
 # Shell options
 shopt -s extglob
+shopt -s nullglob
 shopt -s expand_aliases
 
 # Script directory and arguments
@@ -1532,6 +1533,11 @@ _install_asset()
     fi
     _installed add ${FUNCNAME[2]#_ghlr_}
   fi
+  # prune outdated versions
+  find -maxdepth 1 -type f \
+       -name "${asset}-*" \
+       ! -name "${asset_out}*" \
+       -delete
 }
 
 _remove_asset()
