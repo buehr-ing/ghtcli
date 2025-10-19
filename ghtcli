@@ -464,11 +464,11 @@ _ghlr_helm_ct()
       mkdir -p "${HOME}"/.ct
       local asset_path=$_
       local asset_url=etc/chart_schema.yaml
-      local asset_out='ct-${asset_rel//[^0-9.]}-chart-schema-yaml-${asset_sha}'
+      local asset_out='ct-${asset//[.]/_}-${asset_rel//[^0-9.]}-${asset_sha}'
       local asset=chart_schema.yaml
       _latest_release_raw_asset
       local asset_url=etc/lintconf.yaml
-      local asset_out='ct-${asset_rel//[^0-9.]}-lintconf-yaml-${asset_sha}'
+      local asset_out='ct-${asset//[.]/_}-${asset_rel//[^0-9.]}-${asset_sha}'
       local asset=lintconf.yaml
       _latest_release_raw_asset
       ct completion bash >"${BCD_PATH}"/ct
@@ -496,14 +496,17 @@ _ghlr_jq()
       _latest_release_asset
       ;;
     postinstall)
-      #jq completion bash >"${BCD_PATH}"/jq
-      local repo=bash-completion owner=scop asset=jq
+      # jq completion bash >"${BCD_PATH}"/jq
+      local repo=bash-completion owner=scop asset=jq-scop
       local asset_url=completions/jq
-      local asset_out='${asset}-${asset_sha}-scop-bash-completion'
+      local asset_out='${asset}-${repo}-${asset_sha}'
       local asset_path="${BCD_PATH}"
       _latest_commit_raw_asset
       ;;
-    remove) _remove_asset ;;
+    remove)
+      _remove_asset
+      rm -vf "${BCD_PATH}"/jq-scop
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
@@ -610,31 +613,37 @@ _ghlr_kubectx()
       _latest_release_asset
       ;;
     postinstall)
-      #ktx completion bash >"${BCD_PATH}"/ktx
+      # ktx completion bash >"${BCD_PATH}"/ktx-kubectx
       local asset_url=completion/kubectx.bash
-      local asset_out='ktx-${asset_rel}-bash-completion-${asset_sha}'
+      local asset_out='ktx-bash-completion-${asset_rel}-${asset_sha}'
       local asset_path="${BCD_PATH}"
+      local asset=ktx-kubectx
       _latest_release_raw_asset
       sed 's/^\(complete -F _kube_contexts kubectx kctx\)$/\1 ktx/' \
-        ktx-*-bash-completion-!(*.etag) "${BCD_PATH}"/ktx
-      #ktx completion zsh >"${ZCD_PATH}"/_ktx
+        ktx-bash-completion-*-!(*.etag) "${BCD_PATH}"/ktx-kubectx
+      # ktx completion zsh >"${ZCD_PATH}"/_ktx-kubectx
       local asset_url=completion/_kubectx.zsh
-      local asset_out='ktx-${asset_rel}-zsh-completion-${asset_sha}'
+      local asset_out='ktx-zsh-completion-${asset_rel}-${asset_sha}'
       local asset_path="${ZCD_PATH}"
-      local asset=_ktx
+      local asset=_ktx-kubectx
       _latest_release_raw_asset
       sed 's/^\(#compdef kubectx kctx=kubectx\)$/\1 ktx=kubectx/' \
-        ktx-*-zsh-completion-!(*.etag) "${ZCD_PATH}"/_ktx
-      #ktx completion fish >"${FCD_PATH}"/ktx.fish
+        ktx-zsh-completion-*-!(*.etag) "${ZCD_PATH}"/_ktx-kubectx
+      # ktx completion fish >"${FCD_PATH}"/ktx-kubectx.fish
       local asset_url=completion/kubectx.fish
-      local asset_out='ktx-${asset_rel}-fish-completion-${asset_sha}'
+      local asset_out='ktx-fish-completion-${asset_rel}-${asset_sha}'
       local asset_path="${FCD_PATH}"
-      local asset=ktx.fish
+      local asset=ktx-kubectx.fish
       _latest_release_raw_asset
       sed 's/kubectx/ktx/g' \
-        ktx-*-fish-completion-!(*.etag) "${FCD_PATH}"/ktx.fish
+        ktx-fish-completion-*-!(*.etag) "${FCD_PATH}"/ktx-kubectx.fish
       ;;
-    remove) _remove_asset ;;
+    remove)
+      _remove_asset
+      rm -vf "${BCD_PATH}"/ktx-kubectx
+      rm -vf "${ZCD_PATH}"/_ktx-kubectx
+      rm -vf "${FCD_PATH}"/ktx-kubectx.fish
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
@@ -654,27 +663,33 @@ _ghlr_kubens()
       _latest_release_asset
       ;;
     postinstall)
-      #kns completion bash >"${BCD_PATH}"/kns
+      # kns completion bash >"${BCD_PATH}"/kns-kubens
       local asset_url=completion/kubens.bash
-      local asset_out='kns-${asset_rel}-bash-completion-${asset_sha}'
+      local asset_out='kns-bash-completion-${asset_rel}-${asset_sha}'
       local asset_path="${BCD_PATH}"
+      local asset=kns-kubens
       _latest_release_raw_asset
-      #kns completion zsh >"${ZCD_PATH}"/_kns
+      # kns completion zsh >"${ZCD_PATH}"/_kns-kubens
       local asset_url=completion/_kubens.zsh
-      local asset_out='kns-${asset_rel}-zsh-completion-${asset_sha}'
+      local asset_out='kns-zsh-completion-${asset_rel}-${asset_sha}'
       local asset_path="${ZCD_PATH}"
-      local asset=_kns
+      local asset=_kns-kubens
       _latest_release_raw_asset
-      #kns completion fish >"${FCD_PATH}"/kns.fish
+      # kns completion fish >"${FCD_PATH}"/kns-kubens.fish
       local asset_url=completion/kubens.fish
-      local asset_out='kns-${asset_rel}-fish-completion-${asset_sha}'
+      local asset_out='kns-fish-completion-${asset_rel}-${asset_sha}'
       local asset_path="${FCD_PATH}"
-      local asset=kns.fish
+      local asset=kns-kubens.fish
       _latest_release_raw_asset
       sed 's/kubens/kns/g' \
-        kns-*-fish-completion-!(*.etag) "${FCD_PATH}"/kns.fish
+        kns-fish-completion-*-!(*.etag) "${FCD_PATH}"/kns-kubens.fish
       ;;
-    remove) _remove_asset ;;
+    remove)
+      _remove_asset
+      rm -vf "${BCD_PATH}"/kns-kubens
+      rm -vf "${ZCD_PATH}"/_kns-kubens
+      rm -vf "${FCD_PATH}"/kns-kubens.fish
+      ;;
     clean) _clean_asset ;;
     info) _get_asset_info ;;
     *) false ;;
@@ -1495,6 +1510,7 @@ _latest_commit_raw_asset()
 
 _install_asset()
 {
+  # install
   local asset_path="${asset_path:-${BIN_PATH}}"
   if ! _noninteractive; then
     printf '%s ' "${_clr_orange}${FUNCNAME[2]#_ghlr_}${_clr_reset}"
@@ -1509,6 +1525,8 @@ _install_asset()
       chmod a-x "${asset_path}/${asset}"
     fi
   fi
+
+  # output
   if ! _noninteractive; then
     if [[ -n "${copied-}" ]]; then
       printf '%s%s%s\n' \
@@ -1526,6 +1544,14 @@ _install_asset()
       printf '%s\n' "${copied}"
     fi
   fi
+
+  # prune cache
+  find -maxdepth 1 -type f \
+       -name "${asset}-*" \
+       ! -name "${asset_out}*" \
+       -delete
+
+  # postinstall
   if [[ -z ${postinstall-} ]]; then
     if [[ -n "${copied-}" ]]; then
       local postinstall=called
@@ -1533,11 +1559,6 @@ _install_asset()
     fi
     _installed add ${FUNCNAME[2]#_ghlr_}
   fi
-  # prune outdated versions
-  find -maxdepth 1 -type f \
-       -name "${asset}-*" \
-       ! -name "${asset_out}*" \
-       -delete
 }
 
 _remove_asset()
@@ -1762,7 +1783,7 @@ _autoupdate()
         hostname -f >"${CFG_PATH}"/autoupdate
       fi
       ;;
-    *)
+    *) # usage
       printf '%s\n' "Usage: ghtcli ${cmd} {enable|disable}"
       ;;
   esac
