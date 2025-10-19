@@ -1547,7 +1547,7 @@ _install_asset()
 
   # prune cache
   find -maxdepth 1 -type f \
-       -name "${asset}-*" \
+       -name "${asset_out%%*-}-*" \
        ! -name "${asset_out}*" \
        -delete
 
