@@ -496,6 +496,7 @@ _ghlr_jq()
       _latest_release_asset
       ;;
     postinstall)
+      unset asset_dwl
       # jq completion bash >"${BCD_PATH}"/jq
       local repo=bash-completion owner=scop asset=jq-scop
       local asset_url=completions/jq
@@ -613,6 +614,7 @@ _ghlr_kubectx()
       _latest_release_asset
       ;;
     postinstall)
+      unset asset_dwl
       # ktx completion bash >"${BCD_PATH}"/ktx-kubectx
       local asset_url=completion/kubectx.bash
       local asset_out='ktx-bash-completion-${asset_rel}-${asset_sha}'
@@ -663,6 +665,7 @@ _ghlr_kubens()
       _latest_release_asset
       ;;
     postinstall)
+      unset asset_dwl
       # kns completion bash >"${BCD_PATH}"/kns-kubens
       local asset_url=completion/kubens.bash
       local asset_out='kns-bash-completion-${asset_rel}-${asset_sha}'
