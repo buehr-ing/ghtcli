@@ -1,6 +1,6 @@
 # ghtcli
 
-**ghtcli** is a minimalist shell tool to install, update, and remove useful CLI tools for Talos, Kubernetes, and related systems – directly from official GitHub releases.
+**ghtcli** installs and keeps CLI tools for Docker, Kubernetes, and Talos Linux up to date — directly from official GitHub releases.
 
 ---
 
