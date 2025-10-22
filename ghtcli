@@ -85,9 +85,11 @@ fi
 _ghlr_aquasecurity=trivy
 _ghlr_digitalocean=doctl
 _ghlr_docker=ctop,lazydocker,dry,docuum
+_ghtlr_git=lazygit
 _ghlr_gitlab=glab
 _ghlr_hashicorp=vault,terraform
 _ghlr_kube=kubectl,kube_ps1,krew,kubectx,kubens,k9s,stern,kustomize,helm,helm_ct
+_ghlr_lazy=lazydocker,lazygit
 _ghlr_minio=mc,rclone
 _ghlr_registry=oras,regclient,skopeo
 _ghlr_security=trivy
@@ -741,6 +743,26 @@ _ghlr_lazydocker()
       local asset_ext=tar.gz
       local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL^}_${ARCH}.${asset_ext}'
       local asset_tar=lazydocker
+      _latest_release_asset
+      ;;
+    postinstall) true ;;
+    remove) _remove_asset ;;
+    clean) _clean_asset ;;
+    info) _get_asset_info ;;
+    *) false ;;
+  esac
+}
+
+# lazygit
+_ghlr_lazygit()
+{
+  local repo=lazygit owner=jesseduffield asset=lazygit
+  case ${1} in
+    install)
+      local ARCH=${ARCH/amd64/x86_64}
+      local asset_ext=tar.gz
+      local asset_url='${asset}_${asset_rel//[^0-9.]}_${KERNEL^}_${ARCH}.${asset_ext}'
+      local asset_tar=lazygit
       _latest_release_asset
       ;;
     postinstall) true ;;
