@@ -208,9 +208,9 @@ _ghlr_curl()
       local KERNEL=${KERNEL/darwin/macos}
       local asset_ext=tar.xz
       if [[ ${KERNEL} == macos ]]; then
-        local asset_url='${asset}-${KERNEL}-${ARCH}-${asset_rel}.${asset_ext}'
+        local asset_url='${asset}-${KERNEL}-${ARCH}-${asset_rel//[^0-9.]}.${asset_ext}'
       else
-        local asset_url='${asset}-${KERNEL}-${ARCH}-musl-${asset_rel}.${asset_ext}'
+        local asset_url='${asset}-${KERNEL}-${ARCH}-musl-${asset_rel//[^0-9.]}.${asset_ext}'
         local asset_out='${asset}-${asset_rel}-musl-${KERNEL}-${ARCH}'
       fi
       local asset_tar=curl
